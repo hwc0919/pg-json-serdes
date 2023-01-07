@@ -1,0 +1,13 @@
+#pragma once
+
+namespace pfs
+{
+inline const char * getMetaSql()
+{
+    static const char metaSql[] = { R"(
+@META_SQL@
+)" };
+
+    return metaSql;
+}
+} // namespace pfs
