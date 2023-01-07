@@ -79,14 +79,28 @@ with base(ns, cat, object_oid, att_ordinal, att_name, type_oid, len, pronsp) as
     left outer join pg_class c
     on
         t.typrelid = c.oid
+    -- link array and element type
+    left join pg_type pt2
+    on
+        t.typelem = pt2.oid
+    -- pg_class for array type
+    left join pg_class pc2
+    on
+        pt2.typrelid = pc2.oid
     where
-        n.nspname not like 'pg_temp%' and
-        n.nspname not like 'pg_toast%' and
+        n.nspname not like all(ARRAY['pg_temp%', 'pg_toast%']) and
         n.nspname not in ('information_schema', 'storm_catalog') and
+        -- pg_type.typtype:
+        -- b = base type, c = composite type (e.g., a table's row type), d = domain, e = enum type, p = pseudo-type, r = range type, m = multirange type
         -- pg_class.relkind:
         -- r = ordinary table, i = index, S = sequence, t = TOAST table, v = view,
         -- m = materialized view, c = composite type, f = foreign table, p = partitioned table
-        coalesce(c.relkind, 'c') = 'c'
+        (
+            t.typtype = 'b' and t.typcategory != 'A'                        -- base type, non-array
+         or t.typtype = 'b' and t.typcategory = 'A' and pt2.typtype = 'b'   -- base type array
+         or t.typtype = 'c' and t.typcategory != 'A' and c.relkind = 'c'    -- composite type, non-array
+         or t.typtype = 'b' and t.typcategory = 'A' and pt2.typtype = 'c' and pc2.relkind = 'c' -- composite type array
+        )
 
     union all
 
