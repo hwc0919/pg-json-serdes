@@ -46,6 +46,8 @@ public:
     }
     const std::string & in_type_name(size_t i) const override;
     const std::string & out_type_name(size_t i) const override;
+    void setParamsFromJson(const nlohmann::json & paramObj, IParamSetter & setter) override;
+
     std::string nsp_;
     std::string name_;
     std::string cmp_name_;
@@ -56,6 +58,12 @@ public:
     // Derived data
     std::string stmt_;      // Statement to send to DB
     std::vector<Oid> oids_; // Parameter OID array
+
+private:
+    void setParam(size_t idx, const nlohmann::json & jsonParam, IParamSetter & setter);
+    void setPrimitiveParam(size_t idx, const nlohmann::json & jsonParam, IParamSetter & setter);
+    void setArrayParam(size_t idx, const nlohmann::json & jsonParam, IParamSetter & setter);
+    void setCompositeParam(size_t idx, const nlohmann::json & jsonParam, IParamSetter & setter);
 };
 
 inline bool operator<(const std::shared_ptr<PgFuncImpl> & lhs, const std::shared_ptr<PgFuncImpl> & rhs)

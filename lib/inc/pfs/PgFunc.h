@@ -1,4 +1,6 @@
 #pragma once
+#include <nlohmann/json.hpp>
+#include <pfs/IParamSetter.h>
 
 namespace pfs
 {
@@ -16,6 +18,8 @@ public:
     virtual const std::string & out_name(size_t i) const = 0;
     virtual const std::string & in_type_name(size_t i) const = 0;
     virtual const std::string & out_type_name(size_t i) const = 0;
+
+    virtual void setParamsFromJson(const nlohmann::json & paramObj, IParamSetter & setter) = 0;
 };
 
 } // namespace pfs

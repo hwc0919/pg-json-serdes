@@ -3,8 +3,7 @@ project(pg_func_serdes)
 
 set(CMAKE_CXX_STANDARD 11)
 
-#add_library(pg_func_serdes main.cpp)
-add_executable(${PROJECT_NAME} main.cpp)
+add_library(pg_func_serdes)
 
 target_include_directories(
         ${PROJECT_NAME}
@@ -38,6 +37,9 @@ find_package(PostgreSQL REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE PostgreSQL::PostgreSQL)
 include_directories(${PostgreSQL_INCLUDE_DIR})
 
+find_package(nlohmann_json REQUIRED)
+include_directories(${nlohmann_json_INCLUDE_DIR})
+
 execute_process(COMMAND cat sql/get_meta.sql
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         OUTPUT_VARIABLE META_SQL
@@ -45,3 +47,5 @@ execute_process(COMMAND cat sql/get_meta.sql
 
 configure_file("${PROJECT_SOURCE_DIR}/cmake/templates/MetaSql.h.in"
         "${PROJECT_SOURCE_DIR}/lib/src/MetaSql.h" @ONLY)
+
+add_subdirectory(tests)
