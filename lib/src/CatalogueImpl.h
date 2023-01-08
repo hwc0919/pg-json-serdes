@@ -1,51 +1,16 @@
 //
 // Created by wanchen.he on 2023/1/6.
 //
-
 #pragma once
 
+#include <memory>
 #include <pfs/Catalogue.h>
-#include <pfs/PgFunc.h>
+#include <vector>
 
 namespace pfs
 {
-
-struct PgType;
-struct PgField
-{
-    std::string name_; // CFieldInfo name. For parameters, [-1] is a direction indicator: 'i', 'o', 'b', 'v'.
-    std::shared_ptr<PgType> type_;
-};
-
-struct PgType
-{
-    using Oid = unsigned int;
-
-    std::string name_;    // Name of type is not important, because we do parameter matching by parameter name not parameter type name.
-    Oid oid_;             // Oid of the type in DB
-    char category_;       // 'A'=Array, 'C'=Composite, 'S'=String, 'N'=Number, ...
-    unsigned short size_; // If category_ == 'C', this is length of `fields_`; otherwise it is size of the type in bytes, 0 if variable sized.
-
-    std::vector<PgField> fields_;
-    std::shared_ptr<PgType> elemType_; // Link to element type if this is an array type, or nullptr if this is a base type.
-};
-
-class PgFuncImpl : public PgFunc
-{
-public:
-    using Oid = unsigned int;
-
-    std::string pronsp_;
-    std::string proname_;
-
-    std::vector<PgField> inParams_;
-    std::vector<PgField> outParams_;
-
-    // Derived data
-    std::string stmt_;      // Statement to send to DB
-    std::vector<Oid> oids_; // Parameter OID array
-};
-
+class PgType;
+class PgFuncImpl;
 class CatalogueImpl : public Catalogue
 {
 public:

@@ -10,19 +10,29 @@ target_include_directories(
         ${PROJECT_NAME}
         PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/lib/inc>)
 
-set(public_headers
-        lib/inc/pfs/Catalogue.h
-        lib/inc/pfs/IResult.h
-        lib/inc/pfs/PgFunc.h)
+target_include_directories(${PROJECT_NAME}
+        PUBLIC ${CMAKE_SOURCE_DIR}/lib/inc)
+target_include_directories(${PROJECT_NAME}
+        PRIVATE ${CMAKE_SOURCE_DIR}/lib/src)
+aux_source_directory(${CMAKE_SOURCE_DIR}/lib/src SRC_DIR)
+target_sources(${PROJECT_NAME}
+        PRIVATE
+        ${SRC_DIR})
 
-set(private_headers
-        lib/src/CatalogueImpl.h)
-
-target_sources(${PROJECT_NAME} PRIVATE
-        ${public_headers}
-        ${private_headers}
-        lib/src/Catalogue.cpp
-        lib/src/CatalogueImpl.cpp)
+#
+#set(public_headers
+#        lib/inc/pfs/Catalogue.h
+#        lib/inc/pfs/IResult.h
+#        lib/inc/pfs/PgFunc.h)
+#
+#set(private_headers
+#        lib/src/CatalogueImpl.h)
+#
+#target_sources(${PROJECT_NAME} PRIVATE
+#        ${public_headers}
+#        ${private_headers}
+#        lib/src/Catalogue.cpp
+#        lib/src/CatalogueImpl.cpp)
 
 find_package(PostgreSQL REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE PostgreSQL::PostgreSQL)

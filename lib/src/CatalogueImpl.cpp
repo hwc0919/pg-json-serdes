@@ -3,6 +3,10 @@
 //
 
 #include "CatalogueImpl.h"
+#include "PgField.h"
+#include "PgFuncImpl.h"
+#include "PgType.h"
+#include <cassert>
 #include <pfs/IResult.h>
 #include <stdexcept>
 
@@ -16,9 +20,10 @@ void pfs::CatalogueImpl::parseMeta()
     if (parsed_)
         return;
     parsed_ = true;
-    if (meta_res_->rows() < 2)
+
+    if (meta_res_->rows() < 2 || meta_res_->columns() < 7)
     {
-        throw std::runtime_error("Invalid result");
+        throw std::runtime_error("Invalid result, not enough entries, should be at least 2 * 7");
     }
 
     for (int i = 0; i < meta_res_->rows();)
@@ -114,7 +119,7 @@ int pfs::CatalogueImpl::parseType(const pfs::CatalogueImpl::MetaRow & meta, int 
         types_ = std::vector<std::shared_ptr<PgType>>(meta.len_, std::make_shared<PgType>());
         return 0;
     }
-
+    assert(meta.idx_ > 0);
     PgType & typeInfo = *types_[meta.idx_ - 1];
     typeInfo.name_ = meta.name_;
     typeInfo.oid_ = meta.oid_;
@@ -129,12 +134,12 @@ int pfs::CatalogueImpl::parseType(const pfs::CatalogueImpl::MetaRow & meta, int 
         }
         // Array
         case 'A': {
-            typeInfo.elemType_ = types_[meta.elem_type_idx_ - 1];
+            typeInfo.elem_type_ = types_[meta.elem_type_idx_ - 1];
             return 0;
         }
         // primitive types
         default: {
-            typeInfo.elemType_ = nullptr;
+            typeInfo.elem_type_ = nullptr;
             return 0;
         }
     }
@@ -148,10 +153,10 @@ int pfs::CatalogueImpl::parseFunction(const pfs::CatalogueImpl::MetaRow & meta, 
         funcs_ = std::vector<std::shared_ptr<PgFuncImpl>>(meta.len_, std::make_shared<PgFuncImpl>());
         return 0;
     }
-
+    assert(meta.idx_ > 0);
     PgFuncImpl & func = *funcs_[meta.idx_ - 1];
-    func.pronsp_ = meta.namespace_;
-    func.proname_ = meta.name_;
+    func.namespace_ = meta.namespace_;
+    func.name_ = meta.name_;
     int numParams = meta.len_;
     int numCols = meta.elem_type_idx_; // We reuse type_idx column to store number of output parameters
 
@@ -173,10 +178,10 @@ int pfs::CatalogueImpl::parseFunction(const pfs::CatalogueImpl::MetaRow & meta, 
             if (numParams <= 0)
             {
                 fprintf(stderr, "%s.%s IN parameter \"%s\" out of range\n",
-                        func.pronsp_.c_str(), func.proname_.c_str(), fieldMeta.name_.c_str());
+                        func.namespace_.c_str(), func.name_.c_str(), fieldMeta.name_.c_str());
                 return -1;
             }
-            func.inParams_.push_back(PgField{ fieldMeta.name_, types_[fieldMeta.elem_type_idx_ - 1] });
+            func.in_params_.push_back(PgField{ fieldMeta.name_, types_[fieldMeta.elem_type_idx_ - 1] });
             --numParams;
         }
         if (paramMode == 'o' || paramMode == 'b' || paramMode == 't')
@@ -184,10 +189,10 @@ int pfs::CatalogueImpl::parseFunction(const pfs::CatalogueImpl::MetaRow & meta, 
             if (numCols <= 0)
             {
                 fprintf(stderr, "%s.%s OUT parameter \"%s\" out of range\n",
-                        func.pronsp_.c_str(), func.proname_.c_str(), fieldMeta.name_.c_str());
+                        func.namespace_.c_str(), func.name_.c_str(), fieldMeta.name_.c_str());
                 return -1;
             }
-            func.outParams_.push_back(PgField{
+            func.out_params_.push_back(PgField{
                 fieldMeta.name_, types_[fieldMeta.elem_type_idx_ - 1] });
             --numCols;
         }

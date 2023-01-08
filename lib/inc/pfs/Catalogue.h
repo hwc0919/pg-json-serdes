@@ -16,7 +16,7 @@ class Catalogue
 public:
     static std::shared_ptr<Catalogue> createFromMetaResult(std::shared_ptr<IResult> result);
 
-#if 1
+#if USE_LIBPQ || true
     static std::shared_ptr<Catalogue> createFromDbConnInfo(const std::string & connInfo);
 #endif
 
