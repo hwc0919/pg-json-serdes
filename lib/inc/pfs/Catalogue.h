@@ -21,6 +21,6 @@ public:
 #endif
 
     virtual ~Catalogue();
-    virtual std::vector<std::shared_ptr<PgFunc>> findFunction(const std::string & name) = 0;
+    virtual std::vector<std::shared_ptr<PgFunc>> findFunctions(const std::string & nsp, const std::string & name) = 0;
 };
 } // namespace pfs

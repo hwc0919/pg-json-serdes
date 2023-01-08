@@ -6,8 +6,11 @@
 #include "PgField.h"
 #include "PgFuncImpl.h"
 #include "PgType.h"
-#include <cassert>
 #include <pfs/IResult.h>
+
+#include <algorithm>
+#include <cassert>
+#include <sstream>
 #include <stdexcept>
 
 pfs::CatalogueImpl::CatalogueImpl(std::shared_ptr<IResult> meta_res)
@@ -48,11 +51,21 @@ void pfs::CatalogueImpl::parseMeta()
         }
         i += consumedRows;
     }
+    // parse success, clear resources
+    types_.clear();
+    prepareFunctions();
 }
 
-std::vector<std::shared_ptr<pfs::PgFunc>> pfs::CatalogueImpl::findFunction(const std::string & name)
+std::vector<std::shared_ptr<pfs::PgFunc>> pfs::CatalogueImpl::findFunctions(const std::string & nsp, const std::string & name)
 {
-    return {};
+    auto iters = std::equal_range(funcs_.begin(), funcs_.end(), nsp + "." + name);
+
+    std::vector<std::shared_ptr<pfs::PgFunc>> res;
+    for (auto it = iters.first; it != iters.second; ++it)
+    {
+        res.push_back(*it);
+    }
+    return res;
 }
 
 pfs::CatalogueImpl::MetaRow pfs::CatalogueImpl::parseMetaRow(int row)
@@ -95,7 +108,7 @@ pfs::CatalogueImpl::MetaRow pfs::CatalogueImpl::parseMetaRow(int row)
     }
     if (!meta_res_->isNull(row, 6))
     {
-        meta.namespace_ = std::string(meta_res_->getValue(row, 6), meta_res_->getLength(row, 6));
+        meta.nsp_ = std::string(meta_res_->getValue(row, 6), meta_res_->getLength(row, 6));
     }
 
     printf("Load row %d: type: %c%c, idx: %d, oid: %d, name: \"%.*s\", elem_type_idx: %d, len: %d, namespace: \"%.*s\"\n",
@@ -107,7 +120,7 @@ pfs::CatalogueImpl::MetaRow pfs::CatalogueImpl::parseMetaRow(int row)
            (int)meta.name_.size(), meta.name_.c_str(),
            meta.elem_type_idx_,
            meta.len_,
-           (int)meta.namespace_.size(), meta.namespace_.c_str());
+           (int)meta.nsp_.size(), meta.nsp_.c_str());
     return meta;
 }
 
@@ -150,13 +163,13 @@ int pfs::CatalogueImpl::parseFunction(const pfs::CatalogueImpl::MetaRow & meta, 
     // The statistic row for functions
     if (meta.oid_ == 0)
     {
-        funcs_ = std::vector<std::shared_ptr<PgFuncImpl>>(meta.len_, std::make_shared<PgFuncImpl>());
+        printf("%d functions are fetched\n", meta.len_);
         return 0;
     }
-    assert(meta.idx_ > 0);
-    PgFuncImpl & func = *funcs_[meta.idx_ - 1];
-    func.namespace_ = meta.namespace_;
-    func.name_ = meta.name_;
+
+    auto funcPtr = std::make_shared<PgFuncImpl>(meta.nsp_, meta.name_);
+    funcs_.push_back(funcPtr);
+    auto & func = *funcPtr;
     int numParams = meta.len_;
     int numCols = meta.elem_type_idx_; // We reuse type_idx column to store number of output parameters
 
@@ -178,7 +191,7 @@ int pfs::CatalogueImpl::parseFunction(const pfs::CatalogueImpl::MetaRow & meta, 
             if (numParams <= 0)
             {
                 fprintf(stderr, "%s.%s IN parameter \"%s\" out of range\n",
-                        func.namespace_.c_str(), func.name_.c_str(), fieldMeta.name_.c_str());
+                        func.nsp_.c_str(), func.name_.c_str(), fieldMeta.name_.c_str());
                 return -1;
             }
             func.in_params_.push_back(PgField{ fieldMeta.name_, types_[fieldMeta.elem_type_idx_ - 1] });
@@ -189,7 +202,7 @@ int pfs::CatalogueImpl::parseFunction(const pfs::CatalogueImpl::MetaRow & meta, 
             if (numCols <= 0)
             {
                 fprintf(stderr, "%s.%s OUT parameter \"%s\" out of range\n",
-                        func.namespace_.c_str(), func.name_.c_str(), fieldMeta.name_.c_str());
+                        func.nsp_.c_str(), func.name_.c_str(), fieldMeta.name_.c_str());
                 return -1;
             }
             func.out_params_.push_back(PgField{
@@ -214,4 +227,30 @@ int pfs::CatalogueImpl::parseUdt(const MetaRow & meta, int startRow)
             types_[fieldMeta.elem_type_idx_ - 1] });
     }
     return typeInfo.size_;
+}
+
+void pfs::CatalogueImpl::prepareFunctions()
+{
+    // Sort functions by cmp_name_
+    std::sort(funcs_.begin(), funcs_.end());
+
+    // Prepare sql statement for each function
+    for (auto & func : funcs_)
+    {
+        std::ostringstream stmt;
+        // select * from "namespace"."proname"($1,$2,...,$n)
+        stmt << "select * from \"" << func->nsp_ << "\".\"" << func->name_ << "\"(";
+        // Write parameter placeholders
+        for (int i = 0; i < func->in_params_.size(); ++i)
+        {
+            stmt << (i == 0 ? "$" : ",$") << i + 1;
+        }
+        stmt << ")";
+        func->stmt_ = stmt.str();
+        // Parameter OID and format array, used when passing parameters to PQExecParams()
+        for (int i = 0; i < func->in_params_.size(); i++)
+        {
+            func->oids_.push_back(func->in_params_[i].type_->oid_);
+        }
+    }
 }

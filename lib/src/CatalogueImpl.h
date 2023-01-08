@@ -17,7 +17,7 @@ public:
     explicit CatalogueImpl(std::shared_ptr<IResult> meta_res);
     void parseMeta();
 
-    std::vector<std::shared_ptr<PgFunc>> findFunction(const std::string & name) override;
+    std::vector<std::shared_ptr<PgFunc>> findFunctions(const std::string & nsp, const std::string & name) override;
 
 private:
     struct MetaRow
@@ -28,15 +28,16 @@ private:
         int oid_{ 0 };
         int len_{ 0 };
         int elem_type_idx_{ 0 }; // For array
+        std::string nsp_;
         std::string name_;
-        std::string namespace_;
     };
     MetaRow parseMetaRow(int row);
     int parseType(const MetaRow & meta, int row);
     int parseFunction(const MetaRow & meta, int row);
-
     // parse user-defined composite types
     int parseUdt(const MetaRow & meta, int row);
+
+    void prepareFunctions();
 
     std::shared_ptr<IResult> meta_res_;
     bool parsed_{ false };
