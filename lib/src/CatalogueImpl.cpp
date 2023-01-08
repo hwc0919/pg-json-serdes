@@ -129,7 +129,10 @@ int pfs::CatalogueImpl::parseType(const pfs::CatalogueImpl::MetaRow & meta, int 
     // The statistic row for types
     if (meta.oid_ == 0)
     {
-        types_ = std::vector<std::shared_ptr<PgType>>(meta.len_, std::make_shared<PgType>());
+        for (size_t i = 0; i != meta.len_; ++i)
+        {
+            types_.push_back(std::make_shared<PgType>());
+        }
         return 0;
     }
     assert(meta.idx_ > 0);
@@ -177,6 +180,7 @@ int pfs::CatalogueImpl::parseFunction(const pfs::CatalogueImpl::MetaRow & meta, 
     for (; numParams > 0 || numCols > 0; nRows++)
     {
         MetaRow fieldMeta = parseMetaRow(startRow + nRows);
+        assert(fieldMeta.elem_type_idx_ > 0);
 
         // Parameter mode (pg_proc.proargmodes)
         char paramMode = fieldMeta.category_;
