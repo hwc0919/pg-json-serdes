@@ -64,15 +64,28 @@ void pfs::PgTextWriter::writePrimitive(const pfs::PgType & pgType, const nlohman
             if (jsonParam.is_string())
             {
                 std::string str = jsonParam.get<std::string>();
-                buf.append(str.c_str(), str.size());
+                writeUnescapedString(str, buf);
             }
             else
             {
                 std::string str = jsonParam.dump();
-                buf.append(str.c_str(), str.size());
+                writeUnescapedString(str, buf);
             }
             break;
         }
+        case PG_TIME: {
+            if (jsonParam.is_string())
+            {
+                std::string str = jsonParam.get<std::string>();
+                buf.append(str.c_str(), str.size());
+            }
+            else
+            {
+                throw std::runtime_error("Invalid value for time");
+            }
+            break;
+        }
+        case PG_DATE:
         case PG_TIMESTAMP: {
             if (jsonParam.is_string())
             {
@@ -113,6 +126,58 @@ void pfs::PgTextWriter::writePrimitive(const pfs::PgType & pgType, const nlohman
             throw std::runtime_error("Unsupported pg type oid: " + std::to_string(pgType.oid_));
         }
     }
+}
+
+static bool hasSpecialChar(const std::string & str)
+{
+    static const std::string specialChars = R"( '"\{},)";
+    for (char c : str)
+    {
+        if (!std::isprint(c))
+        {
+            return true;
+        }
+        if (specialChars.find(c) != std::string::npos)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool pfs::PgTextWriter::needQuote(const pfs::PgType & pgType, const nlohmann::json & jsonParam)
+{
+    if (scopeStack_.empty())
+    {
+        // No need to quote upper-most fields
+        return false;
+    }
+    if (!pgType.isPrimitive())
+    {
+        // Always quote non-upper-most array and composite types
+        return true;
+    }
+    const ScopeMark & upperScope = scopeStack_.back();
+    assert(upperScope.type == ScopeType::Array || upperScope.type == ScopeType::Composite);
+
+    if (pgType.isNumber() || jsonParam.is_number())
+    {
+        // No need to quote number as long as user input is correct.
+        return false;
+    }
+    // Check string quote
+    if (pgType.isString() && jsonParam.is_string())
+    {
+        const std::string & str = jsonParam.get<std::string>();
+        if (hasSpecialChar(str))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    // Quote any other types, just in case.
+    return true;
 }
 
 void pfs::PgTextWriter::writeArrayStart(const pfs::PgType & elemType, size_t len, pfs::IBuffer & buf)
@@ -203,8 +268,8 @@ void pfs::PgTextWriter::writeCompositeStart(const pfs::PgType & type, pfs::IBuff
         const ScopeMark & upperScope = scopeStack_.back();
         if (upperScope.type == ScopeType::ArrayElement) // array => composite
         {
-            scope.quote = std::string(scopeStack_.back().quote.size(), '\\')
-                          + scopeStack_.back().quote;
+            scope.quote = std::string(upperScope.quote.size(), '\\')
+                          + upperScope.quote;
         }
         else if (upperScope.type == ScopeType::CompositeField) // composite => composite
         {
@@ -272,4 +337,37 @@ void pfs::PgTextWriter::writeFieldEnd(IBuffer & buf)
 void pfs::PgTextWriter::writeNullField(const pfs::PgType & fieldType, pfs::IBuffer & buf)
 {
     buf.append("null", 4);
+}
+
+void pfs::PgTextWriter::writeUnescapedString(const std::string & str, pfs::IBuffer & buf)
+{
+    for (char c : str)
+    {
+        if (scopeStack_.empty() || (c != '"' && c != '\\'))
+        {
+            buf.append(c);
+            continue;
+        }
+        const ScopeMark & upperScope = scopeStack_.back();
+        if (c == '\\')
+        {
+            buf.append(std::string(upperScope.quote.size() * 2, '\\'));
+            continue;
+        }
+        // c == '"'
+        if (upperScope.type == ScopeType::CompositeField)
+        {
+            buf.append(upperScope.quote);
+            buf.append(upperScope.quote);
+        }
+        else if (upperScope.type == ScopeType::ArrayElement)
+        {
+            buf.append(std::string(upperScope.quote.size(), '\\'));
+            buf.append(upperScope.quote);
+        }
+        else
+        {
+            throw std::runtime_error("Invalid upper scope");
+        }
+    }
 }

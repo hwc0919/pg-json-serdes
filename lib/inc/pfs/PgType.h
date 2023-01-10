@@ -13,7 +13,6 @@ namespace pfs
 enum OidType
 {
     PG_BOOL = 16,
-    PG_CHAR = 18,
     PG_INT8 = 20,
     PG_INT2 = 21,
     PG_INT4 = 23,
@@ -22,6 +21,8 @@ enum OidType
     PG_FLOAT4 = 700,
     PG_FLOAT8 = 701,
     PG_VARCHAR = 1043,
+    PG_DATE = 1082,
+    PG_TIME = 1083,
     PG_TIMESTAMP = 1114,
     PG_JSONB = 3802
 };
@@ -40,16 +41,15 @@ struct PgType
 
     bool isPrimitive() const
     {
-        return fields_.empty();
+        return category_ != 'A' && category_ != 'C';
     }
     bool isArray() const
     {
-        std::string s;
-        return fields_.size() == 1 && fields_[0].name_.empty();
+        return category_ == 'A';
     }
     bool isComposite() const
     {
-        return !fields_.empty() && !fields_[0].name_.empty();
+        return category_ == 'C';
     }
     bool isString() const
     {

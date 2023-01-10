@@ -34,6 +34,11 @@ public:
         paramFormats_[idx] = format;
     }
 
+    size_t size() const
+    {
+        return paramValues_.size();
+    }
+
     const std::vector<const char *> & getParamValues() const
     {
         return paramValues_;

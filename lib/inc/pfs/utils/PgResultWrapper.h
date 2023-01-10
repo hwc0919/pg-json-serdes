@@ -10,7 +10,10 @@
 
 namespace pfs
 {
-
+/**
+ * Wrap raw `PGresult` pointer.
+ * Take the ownership of allocated memery, and provide eazy data access.
+ */
 class PgResultWrapper : public IResult
 {
 public:
@@ -26,25 +29,25 @@ public:
         : result_(std::move(result))
     {
     }
-    int rows() const noexcept override
+    size_t rows() const noexcept override
     {
         return PQntuples(result_.get());
     }
-    int columns() const noexcept override
+    size_t columns() const noexcept override
     {
         return PQnfields(result_.get());
     }
-    bool isNull(int row, int col) const noexcept override
+    bool isNull(size_t row, size_t col) const noexcept override
     {
-        return PQgetisnull(result_.get(), row, col);
+        return PQgetisnull(result_.get(), (int)row, (int)col);
     }
-    const char * getValue(int row, int col) const noexcept override
+    const char * getValue(size_t row, size_t col) const noexcept override
     {
-        return PQgetvalue(result_.get(), row, col);
+        return PQgetvalue(result_.get(), (int)row, (int)col);
     }
-    int getLength(int row, int col) const noexcept override
+    size_t getLength(size_t row, size_t col) const noexcept override
     {
-        return PQgetlength(result_.get(), row, col);
+        return PQgetlength(result_.get(), (int)row, (int)col);
     }
 
 private:

@@ -15,6 +15,13 @@ public:
 
     virtual void writePrimitive(const PgType & pgType, const nlohmann::json & jsonParam, IBuffer & buf) = 0;
 
+    /**
+     * Check whether the next element or field need to quote.
+     * @param pgType
+     * @param jsonParam
+     */
+    virtual bool needQuote(const PgType & pgType, const nlohmann::json & jsonParam) = 0;
+
     virtual void writeArrayStart(const PgType & elemType, size_t len, IBuffer & buf) = 0;
     virtual void writeArrayEnd(IBuffer & buf) = 0;
     virtual void writeElementStart(IBuffer & buf, bool needQuote) = 0;

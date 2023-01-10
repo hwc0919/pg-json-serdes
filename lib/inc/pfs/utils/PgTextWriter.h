@@ -10,6 +10,7 @@ class PgTextWriter : public IPgWriter
 {
 public:
     void writePrimitive(const PgType & pgType, const nlohmann::json & jsonParam, IBuffer & buf) override;
+    bool needQuote(const PgType & pgType, const nlohmann::json & jsonParam) override;
     void writeArrayStart(const PgType & elemType, size_t len, IBuffer & buf) override;
     void writeArrayEnd(IBuffer & buf) override;
     void writeElementStart(IBuffer & buf, bool needQuote) override;
@@ -23,6 +24,8 @@ public:
     void writeNullField(const PgType & fieldType, IBuffer & buf) override;
 
 protected:
+    void writeUnescapedString(const std::string &, IBuffer &);
+
     enum class ScopeType
     {
         None,

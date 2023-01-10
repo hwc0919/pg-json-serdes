@@ -1,8 +1,11 @@
 #pragma once
 #include <cstdlib>
 #include <iostream>
+#include <libpq-fe.h>
+#include <pfs/IResult.h>
 #include <pfs/PgFunc.h>
 #include <pfs/utils/GeneralParamSetter.h>
+#include <pfs/utils/PgResultWrapper.h>
 #include <string>
 
 inline std::string getTestDbUri()
@@ -71,4 +74,44 @@ inline void printParams(const pfs::PgFunc & func, const pfs::GeneralParamSetter 
             std::cout << func.in_name(i) << ": (binary)" << binaryStringToHex((const unsigned char *)params[i], paramLens[i]) << std::endl;
         }
     }
+}
+
+inline void printResults(const pfs::PgFunc & func, const pfs::IResult & result)
+{
+    for (size_t i = 0; i != func.out_size(); ++i)
+    {
+        std::cout << func.out_name(i) << ": " << std::string(result.getValue(0, i), result.getLength(0, i)) << std::endl;
+    }
+}
+
+inline std::shared_ptr<pfs::PgResultWrapper> execSql(const pfs::PgFunc & func, const pfs::GeneralParamSetter & setter)
+{
+    std::shared_ptr<PGconn> connPtr(PQconnectdb(getTestDbUri().c_str()), [](PGconn * conn) {
+        if (conn) {
+            PQfinish(conn);
+        }
+    });
+    if (connPtr == nullptr || PQstatus(connPtr.get()) != CONNECTION_OK)
+    {
+        throw std::runtime_error(std::string("Failed to connect to database. ") + PQerrorMessage(connPtr.get()));
+    }
+    PGresult * r = PQexecParams(
+        connPtr.get(),
+        func.statement().c_str(),
+        (int)setter.size(),
+        nullptr,
+        setter.getParamValues().data(),
+        setter.getParamLens().data(),
+        setter.getParamFormats().data(),
+        0);
+    if (r == nullptr)
+    {
+        throw std::runtime_error(std::string("sql execute failed. ") + PQerrorMessage(connPtr.get()));
+    }
+    auto res = pfs::PgResultWrapper::wrap(r);
+    if (PQresultStatus(r) != PGRES_TUPLES_OK)
+    {
+        throw std::runtime_error(std::string("sql execute failed. ") + PQerrorMessage(connPtr.get()));
+    }
+    return res;
 }

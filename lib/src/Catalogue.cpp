@@ -20,8 +20,8 @@ std::shared_ptr<Catalogue> Catalogue::createFromMetaResult(std::shared_ptr<IResu
 
 #if USE_LIBPQ || true
 #include "MetaSql.h"
-#include "PgResultWrapper.h"
 #include <libpq-fe.h>
+#include <pfs/utils/PgResultWrapper.h>
 
 std::shared_ptr<Catalogue> Catalogue::createFromDbConnInfo(const std::string & connInfo)
 {

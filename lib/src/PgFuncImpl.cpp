@@ -21,9 +21,17 @@ const std::string & PgFuncImpl::out_type_name(size_t i) const
 class StringBuffer : public IBuffer
 {
 public:
+    void append(const std::string & str) override
+    {
+        buf_.append(str);
+    }
     void append(const char * data, size_t len) override
     {
         buf_.append(data, len);
+    }
+    void append(char ch) override
+    {
+        buf_.append(1, ch);
     }
     const char * data() const override
     {
@@ -62,23 +70,6 @@ void PgFuncImpl::setParamsFromJson(const nlohmann::json & paramObj, IParamSetter
     }
 }
 
-static bool hasSpecialChar(const std::string & str)
-{
-    static const std::string specialChars = R"( '"\{},)";
-    for (char c : str)
-    {
-        if (!std::isprint(c))
-        {
-            return false;
-        }
-        if (specialChars.find(c) != std::string::npos)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 void PgFuncImpl::serialize(const PgType & pgType, const nlohmann::json & jsonParam, IPgWriter & writer, IBuffer & buffer)
 {
     if (pgType.isPrimitive())
@@ -98,17 +89,11 @@ void PgFuncImpl::serialize(const PgType & pgType, const nlohmann::json & jsonPar
             {
                 writer.writeSeperator(buffer);
             }
-            // TODO: how to decide whether we need quote in advance?
-            writer.writeElementStart(buffer, true);
+            const nlohmann::json & jsonElem = jsonParam.is_array() ? jsonParam[i] : jsonParam;
+            bool needQuote = writer.needQuote(elemType, jsonElem);
+            writer.writeElementStart(buffer, needQuote);
             // recurse
-            if (jsonParam.is_array())
-            {
-                serialize(elemType, jsonParam[i], writer, buffer);
-            }
-            else
-            {
-                serialize(elemType, jsonParam, writer, buffer);
-            }
+            serialize(elemType, jsonElem, writer, buffer);
             writer.writeElementEnd(buffer);
         }
         writer.writeArrayEnd(buffer);
@@ -139,13 +124,14 @@ void PgFuncImpl::serialize(const PgType & pgType, const nlohmann::json & jsonPar
             }
             auto & fieldParam = jsonParam[name];
             // explicit null value
-            if (jsonParam.is_null())
+            if (fieldParam.is_null())
             {
                 writer.writeNullField(*field.type_, buffer);
                 continue;
             }
-            writer.writeFieldStart(fieldType, buffer, true);
-            serialize(fieldType, jsonParam, writer, buffer);
+            bool needQuote = writer.needQuote(fieldType, fieldParam);
+            writer.writeFieldStart(fieldType, buffer, needQuote);
+            serialize(fieldType, fieldParam, writer, buffer);
             writer.writeFieldEnd(buffer);
         }
         writer.writeCompositeEnd(buffer);

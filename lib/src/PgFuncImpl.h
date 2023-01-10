@@ -29,6 +29,10 @@ public:
     {
         return name_;
     }
+    const std::string & statement() const override
+    {
+        return stmt_;
+    }
     size_t in_size() const override
     {
         return in_params_.size();
