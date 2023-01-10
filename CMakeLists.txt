@@ -3,7 +3,7 @@ project(pg_func_serdes)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_library(pg_func_serdes)
+add_library(pg_func_serdes lib/src/PgFunc.cpp lib/inc/pfs/utils/StringBuffer.h)
 
 target_include_directories(
         ${PROJECT_NAME}

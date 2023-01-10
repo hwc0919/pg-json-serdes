@@ -99,7 +99,7 @@ inline std::shared_ptr<pfs::PgResultWrapper> execSql(const pfs::PgFunc & func, c
         connPtr.get(),
         func.statement().c_str(),
         (int)setter.size(),
-        nullptr,
+        func.oids(),
         setter.getParamValues().data(),
         setter.getParamLens().data(),
         setter.getParamFormats().data(),

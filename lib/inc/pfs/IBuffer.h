@@ -4,15 +4,18 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 
 namespace pfs
 {
 class IBuffer
 {
 public:
+    virtual ~IBuffer() = default;
+    virtual void clear() = 0;
     virtual void append(const std::string & str) = 0;
     virtual void append(const char * data, size_t len) = 0;
-    virtual void append(char ch) = 0;
+    virtual void append(size_t n, char ch) = 0;
 
     virtual const char * data() const = 0;
     virtual size_t size() const = 0;

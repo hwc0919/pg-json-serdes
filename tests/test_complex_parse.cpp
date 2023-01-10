@@ -5,9 +5,11 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <pfs/Catalogue.h>
+#include <pfs/PgFunc.h>
 #include <pfs/utils/GeneralParamSetter.h>
 #include <pfs/utils/PgResultWrapper.h>
 #include <pfs/utils/PgTextWriter.h>
+#include <pfs/utils/StringBuffer.h>
 
 int main()
 {
@@ -41,8 +43,7 @@ int main()
         { "people", { person } }
     };
     std::cout << "Input json: " << req.dump() << std::endl;
-    pfs::PgTextWriter writer;
-    func->setParamsFromJson(req, setter, writer);
+    pfs::PgFunc::parseJsonToParams(req, *func, setter, pfs::PgTextWriter(), pfs::StringBuffer());
     std::cout << "Pg params:" << std::endl;
     printParams(*func, setter);
 

@@ -14,8 +14,6 @@ namespace pfs
 class PgFuncImpl : public PgFunc
 {
 public:
-    using Oid = unsigned int;
-
     PgFuncImpl(std::string nsp, std::string name)
         : nsp_(std::move(nsp)), name_(std::move(name))
     {
@@ -33,6 +31,10 @@ public:
     {
         return stmt_;
     }
+    const Oid * oids() const override
+    {
+        return oids_.data();
+    }
     size_t in_size() const override
     {
         return in_params_.size();
@@ -49,9 +51,10 @@ public:
     {
         return out_params_[i].name_;
     }
+    const PgField & in_field(size_t i) const override;
+    const PgField & out_field(size_t i) const override;
     const std::string & in_type_name(size_t i) const override;
     const std::string & out_type_name(size_t i) const override;
-    void setParamsFromJson(const nlohmann::json & paramObj, IParamSetter & setter, IPgWriter & writer) override;
 
     std::string nsp_;
     std::string name_;
@@ -63,9 +66,6 @@ public:
     // Derived data
     std::string stmt_;      // Statement to send to DB
     std::vector<Oid> oids_; // Parameter OID array
-
-private:
-    static void serialize(const PgType & pgType, const nlohmann::json & jsonParam, IPgWriter & writer, IBuffer & buffer);
 };
 
 inline bool operator<(const std::shared_ptr<PgFuncImpl> & lhs, const std::shared_ptr<PgFuncImpl> & rhs)

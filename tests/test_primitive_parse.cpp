@@ -8,6 +8,7 @@
 #include <pfs/PgFunc.h>
 #include <pfs/utils/GeneralParamSetter.h>
 #include <pfs/utils/PgTextWriter.h>
+#include <pfs/utils/StringBuffer.h>
 
 int main()
 {
@@ -35,8 +36,7 @@ int main()
         { "birthday", birthday },
         { "data", data }
     };
-    pfs::PgTextWriter writer;
-    func->setParamsFromJson(req, setter, writer);
+    pfs::PgFunc::parseJsonToParams(req, *func, setter, pfs::PgTextWriter(), pfs::StringBuffer());
 
     std::cout << "Input json: " << req.dump() << std::endl;
     std::cout << "Pg params:" << std::endl;
