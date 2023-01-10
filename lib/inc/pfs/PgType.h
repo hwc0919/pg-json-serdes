@@ -3,8 +3,8 @@
 //
 #pragma once
 
-#include "PgField.h"
 #include <memory>
+#include <pfs/PgField.h>
 #include <string>
 #include <vector>
 
@@ -50,6 +50,14 @@ struct PgType
     bool isComposite() const
     {
         return !fields_.empty() && !fields_[0].name_.empty();
+    }
+    bool isString() const
+    {
+        return category_ == 'S';
+    }
+    bool isNumber() const
+    {
+        return category_ == 'N';
     }
 };
 

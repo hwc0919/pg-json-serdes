@@ -2,8 +2,9 @@
 // Created by wanchen.he on 2023/1/8.
 //
 #include "PgFuncImpl.h"
-#include "PgType.h"
 #include <iostream>
+#include <pfs/IBuffer.h>
+#include <pfs/PgType.h>
 
 using namespace pfs;
 
@@ -17,7 +18,27 @@ const std::string & PgFuncImpl::out_type_name(size_t i) const
     return out_params_[i].type_->name_;
 }
 
-void PgFuncImpl::setParamsFromJson(const nlohmann::json & paramObj, IParamSetter & setter)
+class StringBuffer : public IBuffer
+{
+public:
+    void append(const char * data, size_t len) override
+    {
+        buf_.append(data, len);
+    }
+    const char * data() const override
+    {
+        return buf_.c_str();
+    }
+    size_t size() const override
+    {
+        return buf_.size();
+    }
+
+private:
+    std::string buf_;
+};
+
+void PgFuncImpl::setParamsFromJson(const nlohmann::json & paramObj, IParamSetter & setter, IPgWriter & writer)
 {
     setter.setSize(in_params_.size());
     for (size_t idx = 0; idx != in_params_.size(); ++idx)
@@ -35,139 +56,98 @@ void PgFuncImpl::setParamsFromJson(const nlohmann::json & paramObj, IParamSetter
         {
             continue;
         }
-        setParam(idx, jsonParam, setter);
+        StringBuffer buffer;
+        serialize(*field.type_, jsonParam, writer, buffer);
+        setter.setParameter(idx, buffer.data(), buffer.size(), 0);
     }
 }
 
-void PgFuncImpl::setParam(size_t idx, const nlohmann::json & jsonParam, IParamSetter & setter)
+static bool hasSpecialChar(const std::string & str)
 {
-    auto & field = in_params_[idx];
-    if (field.type_->isPrimitive())
+    static const std::string specialChars = R"( '"\{},)";
+    for (char c : str)
     {
-        setPrimitiveParam(idx, jsonParam, setter);
+        if (!std::isprint(c))
+        {
+            return false;
+        }
+        if (specialChars.find(c) != std::string::npos)
+        {
+            return false;
+        }
     }
-    else if (field.type_->isArray())
-    {
-        setArrayParam(idx, jsonParam, setter);
-    }
-    else // Is composite
-    {
-        assert(field.type_->isComposite());
-        setCompositeParam(idx, jsonParam, setter);
-    }
+    return true;
 }
 
-void PgFuncImpl::setPrimitiveParam(size_t idx, const nlohmann::json & jsonParam, IParamSetter & setter)
+void PgFuncImpl::serialize(const PgType & pgType, const nlohmann::json & jsonParam, IPgWriter & writer, IBuffer & buffer)
 {
-    auto & field = in_params_[idx];
-    switch (field.type_->oid_)
+    if (pgType.isPrimitive())
     {
-        case PG_BOOL: {
-            if (jsonParam.is_number() && jsonParam == 0
-                || jsonParam.is_boolean() && jsonParam == false
-                || jsonParam.is_string() && (jsonParam == "f" || jsonParam == "false"))
-            {
-                setter.setString(idx, "f");
-            }
-            else
-            {
-                setter.setString(idx, "t");
-            }
-            break;
-        }
-        case PG_INT2:
-        case PG_INT4:
-        case PG_INT8: {
-            if (jsonParam.is_number())
-            {
-                setter.setLong(idx, jsonParam.get<int64_t>());
-            }
-            else if (jsonParam.is_string())
-            {
-                setter.setString(idx, jsonParam.get<std::string>());
-            }
-            else
-            {
-                std::cout << "Invalid value for pg int: " << jsonParam << std::endl;
-            }
-            break;
-        }
-        case PG_FLOAT4:
-        case PG_FLOAT8: {
-            if (jsonParam.is_number())
-            {
-                setter.setDouble(idx, jsonParam.get<double>());
-            }
-            else if (jsonParam.is_string())
-            {
-                setter.setString(idx, jsonParam.get<std::string>());
-            }
-            else
-            {
-                std::cout << "Invalid value for pg float: " << jsonParam << std::endl;
-            }
-            break;
-        }
-        case PG_TEXT:
-        case PG_VARCHAR:
-        case PG_JSON:
-        case PG_JSONB: {
-            if (jsonParam.is_string())
-            {
-                setter.setString(idx, jsonParam.get<std::string>());
-            }
-            else
-            {
-                setter.setString(idx, jsonParam.dump());
-            }
-            break;
-        }
-        case PG_TIMESTAMP: {
-            if (jsonParam.is_string())
-            {
-                setter.setString(idx, jsonParam.get<std::string>());
-            }
-            else if (jsonParam.is_number())
-            {
-                int64_t epochMs = jsonParam.get<int64_t>();
-                time_t epoch = (epochMs / 1000);
-                struct tm datetime
-                {
-                };
-                if (gmtime_r(&epoch, &datetime) == nullptr)
-                {
-                    throw std::runtime_error("gmtime_r failed");
-                }
-
-                // Print as ISO 8601 format
-                char buf[32];
-                int len = snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03d",
-                                   1900 + datetime.tm_year,
-                                   1 + datetime.tm_mon,
-                                   datetime.tm_mday,
-                                   datetime.tm_hour,
-                                   datetime.tm_min,
-                                   datetime.tm_sec,
-                                   static_cast<int>(epochMs % 1000));
-                setter.setData(idx, buf, len, 0);
-            }
-            else
-            {
-                std::cout << "Unsupported json value for timestamp: " << jsonParam << std::endl;
-            }
-            break;
-        }
-        default: {
-            // TODO: set default converter
-            std::cout << "Unsupported pg type oid: " << field.type_->oid_ << std::endl;
-        }
+        writer.writePrimitive(pgType, jsonParam, buffer);
     }
-}
+    else if (pgType.isArray())
+    {
+        size_t len = jsonParam.is_array() ? jsonParam.size() : 1;
+        assert(pgType.elem_type_);
+        const PgType & elemType = *pgType.elem_type_;
 
-void PgFuncImpl::setArrayParam(size_t idx, const nlohmann::json & jsonParam, IParamSetter & setter)
-{
-}
-
-void PgFuncImpl::setCompositeParam(size_t idx, const nlohmann::json & jsonParam, IParamSetter & setter)
-{
+        writer.writeArrayStart(elemType, len, buffer);
+        for (size_t i = 0; i < len; ++i)
+        {
+            if (i > 0)
+            {
+                writer.writeSeperator(buffer);
+            }
+            // TODO: how to decide whether we need quote in advance?
+            writer.writeElementStart(buffer, true);
+            // recurse
+            if (jsonParam.is_array())
+            {
+                serialize(elemType, jsonParam[i], writer, buffer);
+            }
+            else
+            {
+                serialize(elemType, jsonParam, writer, buffer);
+            }
+            writer.writeElementEnd(buffer);
+        }
+        writer.writeArrayEnd(buffer);
+    }
+    else
+    {
+        if (!jsonParam.is_object())
+        {
+            throw std::runtime_error("Should be object");
+        }
+        writer.writeCompositeStart(pgType, buffer);
+        for (size_t i = 0; i != pgType.fields_.size(); ++i)
+        {
+            if (i > 0)
+            {
+                writer.writeFieldSeparator(buffer);
+            }
+            const PgField & field = pgType.fields_[i];
+            assert(field.type_ && !field.name_.empty());
+            const PgType & fieldType = *field.type_;
+            const std::string & name = field.name_;
+            // Field not found, leave it emtpy
+            if (!jsonParam.contains(name))
+            {
+                writer.writeFieldStart(fieldType, buffer, false);
+                writer.writeFieldEnd(buffer);
+                continue;
+            }
+            auto & fieldParam = jsonParam[name];
+            // explicit null value
+            if (jsonParam.is_null())
+            {
+                writer.writeNullField(*field.type_, buffer);
+                continue;
+            }
+            writer.writeFieldStart(fieldType, buffer, true);
+            serialize(fieldType, jsonParam, writer, buffer);
+            writer.writeFieldEnd(buffer);
+        }
+        writer.writeCompositeEnd(buffer);
+    }
 }

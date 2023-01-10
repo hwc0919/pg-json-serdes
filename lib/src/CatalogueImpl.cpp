@@ -3,13 +3,13 @@
 //
 
 #include "CatalogueImpl.h"
-#include "PgField.h"
 #include "PgFuncImpl.h"
-#include "PgType.h"
-#include <pfs/IResult.h>
 
 #include <algorithm>
 #include <cassert>
+#include <pfs/IResult.h>
+#include <pfs/PgField.h>
+#include <pfs/PgType.h>
 #include <sstream>
 #include <stdexcept>
 
