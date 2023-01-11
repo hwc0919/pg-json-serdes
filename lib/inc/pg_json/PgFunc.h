@@ -23,6 +23,10 @@ public:
         parseJsonToParams(obj, func, setter, writer, buffer);
     }
     static nlohmann::json parseResultToJson(const PgFunc & func, const IResult & result, IPgReader & reader, Cursor & cursor);
+    static nlohmann::json parseResultToJson(const PgFunc & func, const IResult & result, IPgReader && reader, Cursor && cursor)
+    {
+        return parseResultToJson(func, result, reader, cursor);
+    }
 
     virtual const std::string & namespace_() const = 0;
     virtual const std::string & name() const = 0;

@@ -54,8 +54,6 @@ int main()
     std::cout << "Pg result:" << std::endl;
     printResults(*func, *res);
 
-    pg_json::PgTextReader reader;
-    pg_json::RawCursor cursor;
-    auto resJson = pg_json::PgFunc::parseResultToJson(*func, *res, reader, cursor);
+    auto resJson = pg_json::PgFunc::parseResultToJson(*func, *res, pg_json::PgTextReader(), pg_json::RawCursor());
     std::cout << "Result json: " << resJson.dump() << std::endl;
 }
