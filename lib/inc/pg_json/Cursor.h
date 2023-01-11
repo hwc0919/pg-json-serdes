@@ -5,7 +5,7 @@
 
 #include <cstddef>
 
-namespace pfs
+namespace pg_json
 {
 class Cursor
 {
@@ -24,4 +24,4 @@ public:
     // advance read cursor
     virtual void advance(size_t step) = 0;
 };
-} // namespace pfs
+} // namespace pg_json

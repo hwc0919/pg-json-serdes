@@ -2,10 +2,10 @@
 // Created by wanchen.he on 2023/1/8.
 //
 #include "PgFuncImpl.h"
-#include <pfs/IBuffer.h>
-#include <pfs/PgType.h>
+#include <pg_json/IBuffer.h>
+#include <pg_json/PgType.h>
 
-using namespace pfs;
+using namespace pg_json;
 
 const PgField & PgFuncImpl::in_field(size_t i) const
 {

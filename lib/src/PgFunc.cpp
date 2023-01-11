@@ -1,12 +1,12 @@
 //
 // Created by wanchen.he on 2023/1/10.
 //
-#include <pfs/IBuffer.h>
-#include <pfs/IParamSetter.h>
-#include <pfs/PgFunc.h>
+#include <pg_json/IBuffer.h>
+#include <pg_json/IParamSetter.h>
+#include <pg_json/PgFunc.h>
 #include <string>
 
-using namespace pfs;
+using namespace pg_json;
 
 class RawCursor
 {
@@ -47,7 +47,7 @@ protected:
 
 static void serialize(const PgType & pgType, const nlohmann::json & param, IPgWriter & writer, IBuffer & buffer);
 
-void pfs::PgFunc::parseJsonToParams(const nlohmann::json & obj, const pfs::PgFunc & func, pfs::IParamSetter & setter, pfs::IPgWriter & writer, IBuffer & buffer)
+void pg_json::PgFunc::parseJsonToParams(const nlohmann::json & obj, const pg_json::PgFunc & func, pg_json::IParamSetter & setter, pg_json::IPgWriter & writer, IBuffer & buffer)
 {
     setter.setSize(func.in_size());
     for (size_t idx = 0; idx != func.in_size(); ++idx)

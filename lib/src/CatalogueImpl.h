@@ -4,10 +4,10 @@
 #pragma once
 
 #include <memory>
-#include <pfs/Catalogue.h>
+#include <pg_json/Catalogue.h>
 #include <vector>
 
-namespace pfs
+namespace pg_json
 {
 class PgType;
 class PgFuncImpl;
@@ -45,4 +45,4 @@ private:
     std::vector<std::shared_ptr<PgType>> types_;
     std::vector<std::shared_ptr<PgFuncImpl>> funcs_;
 };
-} // namespace pfs
+} // namespace pg_json

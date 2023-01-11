@@ -6,9 +6,9 @@
 #if USE_LIBPQ || true
 #include <libpq-fe.h>
 #include <memory>
-#include <pfs/IResult.h>
+#include <pg_json/IResult.h>
 
-namespace pfs
+namespace pg_json
 {
 /**
  * Wrap raw `PGresult` pointer.
@@ -54,6 +54,6 @@ private:
     std::shared_ptr<PGresult> result_;
 };
 
-} // namespace pfs
+} // namespace pg_json
 
 #endif

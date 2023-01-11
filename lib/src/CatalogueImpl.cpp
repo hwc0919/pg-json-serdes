@@ -7,18 +7,18 @@
 
 #include <algorithm>
 #include <cassert>
-#include <pfs/IResult.h>
-#include <pfs/PgField.h>
-#include <pfs/PgType.h>
+#include <pg_json/IResult.h>
+#include <pg_json/PgField.h>
+#include <pg_json/PgType.h>
 #include <sstream>
 #include <stdexcept>
 
-pfs::CatalogueImpl::CatalogueImpl(std::shared_ptr<IResult> meta_res)
+pg_json::CatalogueImpl::CatalogueImpl(std::shared_ptr<IResult> meta_res)
     : meta_res_(std::move(meta_res))
 {
 }
 
-void pfs::CatalogueImpl::parseMeta()
+void pg_json::CatalogueImpl::parseMeta()
 {
     if (parsed_)
         return;
@@ -56,11 +56,11 @@ void pfs::CatalogueImpl::parseMeta()
     prepareFunctions();
 }
 
-std::vector<std::shared_ptr<pfs::PgFunc>> pfs::CatalogueImpl::findFunctions(const std::string & nsp, const std::string & name)
+std::vector<std::shared_ptr<pg_json::PgFunc>> pg_json::CatalogueImpl::findFunctions(const std::string & nsp, const std::string & name)
 {
     auto iters = std::equal_range(funcs_.begin(), funcs_.end(), nsp + "." + name);
 
-    std::vector<std::shared_ptr<pfs::PgFunc>> res;
+    std::vector<std::shared_ptr<pg_json::PgFunc>> res;
     for (auto it = iters.first; it != iters.second; ++it)
     {
         res.push_back(*it);
@@ -68,7 +68,7 @@ std::vector<std::shared_ptr<pfs::PgFunc>> pfs::CatalogueImpl::findFunctions(cons
     return res;
 }
 
-pfs::CatalogueImpl::MetaRow pfs::CatalogueImpl::parseMetaRow(int row)
+pg_json::CatalogueImpl::MetaRow pg_json::CatalogueImpl::parseMetaRow(int row)
 {
     MetaRow meta;
     if (!meta_res_->isNull(row, 0))
@@ -124,7 +124,7 @@ pfs::CatalogueImpl::MetaRow pfs::CatalogueImpl::parseMetaRow(int row)
     return meta;
 }
 
-int pfs::CatalogueImpl::parseType(const pfs::CatalogueImpl::MetaRow & meta, int startRow)
+int pg_json::CatalogueImpl::parseType(const pg_json::CatalogueImpl::MetaRow & meta, int startRow)
 {
     // The statistic row for types
     if (meta.oid_ == 0)
@@ -161,7 +161,7 @@ int pfs::CatalogueImpl::parseType(const pfs::CatalogueImpl::MetaRow & meta, int 
     }
 }
 
-int pfs::CatalogueImpl::parseFunction(const pfs::CatalogueImpl::MetaRow & meta, int startRow)
+int pg_json::CatalogueImpl::parseFunction(const pg_json::CatalogueImpl::MetaRow & meta, int startRow)
 {
     // The statistic row for functions
     if (meta.oid_ == 0)
@@ -218,7 +218,7 @@ int pfs::CatalogueImpl::parseFunction(const pfs::CatalogueImpl::MetaRow & meta, 
     return nRows;
 }
 
-int pfs::CatalogueImpl::parseUdt(const MetaRow & meta, int startRow)
+int pg_json::CatalogueImpl::parseUdt(const MetaRow & meta, int startRow)
 {
     PgType & typeInfo = *types_[meta.idx_ - 1];
 
@@ -233,7 +233,7 @@ int pfs::CatalogueImpl::parseUdt(const MetaRow & meta, int startRow)
     return typeInfo.size_;
 }
 
-void pfs::CatalogueImpl::prepareFunctions()
+void pg_json::CatalogueImpl::prepareFunctions()
 {
     // Sort functions by cmp_name_
     std::sort(funcs_.begin(), funcs_.end());

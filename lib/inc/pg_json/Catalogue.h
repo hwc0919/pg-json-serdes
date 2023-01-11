@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace pfs
+namespace pg_json
 {
 class PgFunc;
 class IResult;
@@ -23,4 +23,4 @@ public:
     virtual ~Catalogue();
     virtual std::vector<std::shared_ptr<PgFunc>> findFunctions(const std::string & nsp, const std::string & name) = 0;
 };
-} // namespace pfs
+} // namespace pg_json

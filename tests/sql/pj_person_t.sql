@@ -1,4 +1,4 @@
-create type pfs_person_t as
+create type pj_person_t as
 (
     name        text,
     age         int,

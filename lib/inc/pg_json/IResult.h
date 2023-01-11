@@ -3,7 +3,7 @@
 //
 #pragma once
 
-namespace pfs
+namespace pg_json
 {
 class IResult
 {
@@ -15,4 +15,4 @@ public:
     virtual const char * getValue(size_t row, size_t col) const noexcept = 0;
     virtual size_t getLength(size_t row, size_t col) const noexcept = 0;
 };
-} // namespace pfs
+} // namespace pg_json

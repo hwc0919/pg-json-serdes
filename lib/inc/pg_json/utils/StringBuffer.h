@@ -1,9 +1,9 @@
 #pragma once
 
-#include <pfs/IBuffer.h>
+#include <pg_json/IBuffer.h>
 #include <string>
 
-namespace pfs
+namespace pg_json
 {
 class StringBuffer : public IBuffer
 {
@@ -36,4 +36,4 @@ public:
 private:
     std::string buf_;
 };
-} // namespace pfs
+} // namespace pg_json

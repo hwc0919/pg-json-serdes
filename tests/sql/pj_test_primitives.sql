@@ -1,4 +1,4 @@
-create function pfs_test_primitives
+create function pj_test_primitives
 (
     name        text,
     age         int,
@@ -9,7 +9,7 @@ out user_info   jsonb
 language plpgsql
 as $$
 begin
-    raise notice 'pfs_test_primitives, name = %, age = %, birthday = %, data = %',
+    raise notice 'pj_test_primitives, name = %, age = %, birthday = %, data = %',
         name, age, birthday, data;
 
     user_info = jsonb_build_object(

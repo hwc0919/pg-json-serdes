@@ -4,11 +4,11 @@
 #pragma once
 
 #include <memory>
-#include <pfs/PgField.h>
+#include <pg_json/PgField.h>
 #include <string>
 #include <vector>
 
-namespace pfs
+namespace pg_json
 {
 enum OidType
 {
@@ -61,4 +61,4 @@ struct PgType
     }
 };
 
-} // namespace pfs
+} // namespace pg_json

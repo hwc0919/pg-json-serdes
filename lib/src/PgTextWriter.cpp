@@ -1,9 +1,9 @@
 //
 // Created by wanchen.he on 2023/1/9.
 //
-#include <pfs/utils/PgTextWriter.h>
+#include <pg_json/utils/PgTextWriter.h>
 
-void pfs::PgTextWriter::writePrimitive(const pfs::PgType & pgType, const nlohmann::json & jsonParam, pfs::IBuffer & buf)
+void pg_json::PgTextWriter::writePrimitive(const pg_json::PgType & pgType, const nlohmann::json & jsonParam, pg_json::IBuffer & buf)
 {
     switch (pgType.oid_)
     {
@@ -137,7 +137,7 @@ static bool hasSpecialChar(const std::string & str)
     });
 }
 
-bool pfs::PgTextWriter::needQuote(const pfs::PgType & pgType, const nlohmann::json & jsonParam)
+bool pg_json::PgTextWriter::needQuote(const pg_json::PgType & pgType, const nlohmann::json & jsonParam)
 {
     if (scopeStack_.empty())
     {
@@ -172,7 +172,7 @@ bool pfs::PgTextWriter::needQuote(const pfs::PgType & pgType, const nlohmann::js
     return true;
 }
 
-void pfs::PgTextWriter::writeArrayStart(const pfs::PgType & elemType, size_t len, pfs::IBuffer & buf)
+void pg_json::PgTextWriter::writeArrayStart(const pg_json::PgType & elemType, size_t len, pg_json::IBuffer & buf)
 {
     ScopeMark scope(ScopeType::Array);
     if (scopeStack_.empty())
@@ -199,7 +199,7 @@ void pfs::PgTextWriter::writeArrayStart(const pfs::PgType & elemType, size_t len
     buf.append(1, '{');
 }
 
-void pfs::PgTextWriter::writeArrayEnd(pfs::IBuffer & buf)
+void pg_json::PgTextWriter::writeArrayEnd(pg_json::IBuffer & buf)
 {
     if (scopeStack_.empty() || scopeStack_.back().type != ScopeType::Array)
     {
@@ -209,7 +209,7 @@ void pfs::PgTextWriter::writeArrayEnd(pfs::IBuffer & buf)
     buf.append(1, '}');
 }
 
-void pfs::PgTextWriter::writeElementStart(pfs::IBuffer & buf, bool needQuote)
+void pg_json::PgTextWriter::writeElementStart(pg_json::IBuffer & buf, bool needQuote)
 {
     if (scopeStack_.empty() || scopeStack_.back().type != ScopeType::Array)
     {
@@ -227,12 +227,12 @@ void pfs::PgTextWriter::writeElementStart(pfs::IBuffer & buf, bool needQuote)
     scopeStack_.push_back(std::move(scope));
 }
 
-void pfs::PgTextWriter::writeElementSeperator(pfs::IBuffer & buf)
+void pg_json::PgTextWriter::writeElementSeperator(pg_json::IBuffer & buf)
 {
     buf.append(1, ',');
 }
 
-void pfs::PgTextWriter::writeElementEnd(pfs::IBuffer & buf)
+void pg_json::PgTextWriter::writeElementEnd(pg_json::IBuffer & buf)
 {
     if (scopeStack_.empty() || scopeStack_.back().type != ScopeType::ArrayElement)
     {
@@ -248,7 +248,7 @@ void pfs::PgTextWriter::writeElementEnd(pfs::IBuffer & buf)
     }
 }
 
-void pfs::PgTextWriter::writeCompositeStart(const pfs::PgType & type, pfs::IBuffer & buf)
+void pg_json::PgTextWriter::writeCompositeStart(const pg_json::PgType & type, pg_json::IBuffer & buf)
 {
     ScopeMark scope(ScopeType::Composite);
     if (scopeStack_.empty())
@@ -276,7 +276,7 @@ void pfs::PgTextWriter::writeCompositeStart(const pfs::PgType & type, pfs::IBuff
     buf.append(1, '(');
 }
 
-void pfs::PgTextWriter::writeCompositeEnd(IBuffer & buf)
+void pg_json::PgTextWriter::writeCompositeEnd(IBuffer & buf)
 {
     if (scopeStack_.empty() || scopeStack_.back().type != ScopeType::Composite)
     {
@@ -286,7 +286,7 @@ void pfs::PgTextWriter::writeCompositeEnd(IBuffer & buf)
     buf.append(1, ')');
 }
 
-void pfs::PgTextWriter::writeFieldStart(const PgType & fieldType, IBuffer & buf, bool needQuote)
+void pg_json::PgTextWriter::writeFieldStart(const PgType & fieldType, IBuffer & buf, bool needQuote)
 {
     if (scopeStack_.empty() || scopeStack_.back().type != ScopeType::Composite)
     {
@@ -305,12 +305,12 @@ void pfs::PgTextWriter::writeFieldStart(const PgType & fieldType, IBuffer & buf,
     scopeStack_.push_back(std::move(scope));
 }
 
-void pfs::PgTextWriter::writeFieldSeparator(pfs::IBuffer & buf)
+void pg_json::PgTextWriter::writeFieldSeparator(pg_json::IBuffer & buf)
 {
     buf.append(1, ',');
 }
 
-void pfs::PgTextWriter::writeFieldEnd(IBuffer & buf)
+void pg_json::PgTextWriter::writeFieldEnd(IBuffer & buf)
 {
     if (scopeStack_.empty() || scopeStack_.back().type != ScopeType::CompositeField)
     {
@@ -326,12 +326,12 @@ void pfs::PgTextWriter::writeFieldEnd(IBuffer & buf)
     }
 }
 
-void pfs::PgTextWriter::writeNullField(const pfs::PgType & fieldType, pfs::IBuffer & buf)
+void pg_json::PgTextWriter::writeNullField(const pg_json::PgType & fieldType, pg_json::IBuffer & buf)
 {
     buf.append("null", 4);
 }
 
-void pfs::PgTextWriter::writeUnescapedString(const std::string & str, pfs::IBuffer & buf)
+void pg_json::PgTextWriter::writeUnescapedString(const std::string & str, pg_json::IBuffer & buf)
 {
     if (scopeStack_.empty())
     {

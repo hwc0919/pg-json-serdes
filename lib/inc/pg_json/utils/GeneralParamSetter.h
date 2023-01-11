@@ -4,11 +4,11 @@
 #pragma once
 
 #include <memory>
-#include <pfs/IParamSetter.h>
+#include <pg_json/IParamSetter.h>
 #include <string>
 #include <vector>
 
-namespace pfs
+namespace pg_json
 {
 
 /**
@@ -60,4 +60,4 @@ private:
     std::vector<int> paramLens_;
     std::vector<int> paramFormats_; // 0: text, 1: binary. Text format requires paramValues_ to be '\0' terminated.
 };
-} // namespace pfs
+} // namespace pg_json

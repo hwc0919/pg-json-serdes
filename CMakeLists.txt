@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
-project(pg_func_serdes)
+project(pg_json_serdes)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_library(pg_func_serdes lib/src/PgFunc.cpp lib/inc/pfs/utils/StringBuffer.h)
+add_library(${PROJECT_NAME})
 
 target_include_directories(
         ${PROJECT_NAME}
@@ -16,38 +16,40 @@ target_include_directories(${PROJECT_NAME}
 aux_source_directory(${CMAKE_SOURCE_DIR}/lib/src SRC_DIR)
 
 set(public_headers
-        lib/inc/pfs/PgField.h
-        lib/inc/pfs/PgType.h
-        lib/inc/pfs/PgFunc.h
-        lib/inc/pfs/Catalogue.h
-        lib/inc/pfs/IBuffer.h
-        lib/inc/pfs/Cursor.h
-        lib/inc/pfs/IParamSetter.h
-        lib/inc/pfs/IResult.h
-        lib/inc/pfs/IPgReader.h
-        lib/inc/pfs/IPgWriter.h
+        lib/inc/pg_json/PgField.h
+        lib/inc/pg_json/PgType.h
+        lib/inc/pg_json/PgFunc.h
+        lib/inc/pg_json/Catalogue.h
+        lib/inc/pg_json/IBuffer.h
+        lib/inc/pg_json/Cursor.h
+        lib/inc/pg_json/IParamSetter.h
+        lib/inc/pg_json/IResult.h
+        lib/inc/pg_json/IPgReader.h
+        lib/inc/pg_json/IPgWriter.h
+        lib/inc/pg_json/utils/GeneralParamSetter.h
+        lib/inc/pg_json/utils/PgResultWrapper.h
+        lib/inc/pg_json/utils/PgTextReader.h
+        lib/inc/pg_json/utils/PgTextWriter.h
+        lib/inc/pg_json/utils/RawCursor.h
+        lib/inc/pg_json/utils/StringBuffer.h)
 
-        lib/inc/pfs/utils/GeneralParamSetter.h
-        lib/inc/pfs/utils/PgResultWrapper.h
-        lib/inc/pfs/utils/PgTextReader.h
-        lib/inc/pfs/utils/PgTextWriter.h
-        lib/inc/pfs/utils/RawCursor.h
-        lib/inc/pfs/utils/StringBuffer.h
-        )
+set(private_headers
+        lib/src/MetaSql.h
+        lib/src/PgFuncImpl.h
+        lib/src/CatalogueImpl.h)
 
-#set(private_headers
-#        lib/src/CatalogueImpl.h)
-#
-#target_sources(${PROJECT_NAME} PRIVATE
-#        ${public_headers}
-#        ${private_headers}
-#        lib/src/Catalogue.cpp
-#        lib/src/CatalogueImpl.cpp)
+set(PJ_SRC
+        lib/src/Catalogue.cpp
+        lib/src/CatalogueImpl.cpp
+        lib/src/PgFunc.cpp
+        lib/src/PgFuncImpl.cpp
+        lib/src/PgTextReader.cpp
+        lib/src/PgTextWriter.cpp)
 
-target_sources(${PROJECT_NAME}
-        PRIVATE
+target_sources(${PROJECT_NAME} PRIVATE
         ${public_headers}
-        ${SRC_DIR})
+        ${private_headers}
+        ${PJ_SRC})
 
 find_package(PostgreSQL REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE PostgreSQL::PostgreSQL)

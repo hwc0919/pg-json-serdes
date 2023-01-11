@@ -5,7 +5,7 @@
 
 #include <stddef.h>
 
-namespace pfs
+namespace pg_json
 {
 
 struct IParamSetter
@@ -16,4 +16,4 @@ struct IParamSetter
     virtual void setParameter(size_t idx, const char * data, size_t len, int format) = 0;
 };
 
-} // namespace pfs
+} // namespace pg_json

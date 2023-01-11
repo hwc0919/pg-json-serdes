@@ -3,9 +3,9 @@
 //
 #pragma once
 
-#include <pfs/IPgReader.h>
+#include <pg_json/IPgReader.h>
 
-namespace pfs
+namespace pg_json
 {
 class PgTextReader : public IPgReader
 {
@@ -47,4 +47,4 @@ protected:
 
     std::vector<ScopeMark> scopeStack_;
 };
-} // namespace pfs
+} // namespace pg_json

@@ -6,7 +6,7 @@
 #include <memory>
 #include <string>
 
-namespace pfs
+namespace pg_json
 {
 struct PgType;
 struct PgField
@@ -16,4 +16,4 @@ struct PgField
     std::shared_ptr<PgType> type_;
 };
 
-} // namespace pfs
+} // namespace pg_json

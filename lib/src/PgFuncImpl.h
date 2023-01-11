@@ -3,13 +3,13 @@
 //
 #pragma once
 
-#include <pfs/IPgWriter.h>
-#include <pfs/PgField.h>
-#include <pfs/PgFunc.h>
+#include <pg_json/IPgWriter.h>
+#include <pg_json/PgField.h>
+#include <pg_json/PgFunc.h>
 #include <string>
 #include <vector>
 
-namespace pfs
+namespace pg_json
 {
 class PgFuncImpl : public PgFunc
 {
@@ -98,4 +98,4 @@ inline bool operator==(const std::string & cmp_name, const std::shared_ptr<PgFun
     return cmp_name == rhs->cmp_name_;
 }
 
-} // namespace pfs
+} // namespace pg_json

@@ -3,10 +3,10 @@
 //
 #pragma once
 #include <nlohmann/json.hpp>
-#include <pfs/Cursor.h>
-#include <pfs/PgType.h>
+#include <pg_json/Cursor.h>
+#include <pg_json/PgType.h>
 
-namespace pfs
+namespace pg_json
 {
 class IPgReader
 {
@@ -27,4 +27,4 @@ public:
     virtual void readFieldSeparator(Cursor & cursor) = 0;
     virtual void readFieldEnd(Cursor & cursor) = 0;
 };
-} // namespace pfs
+} // namespace pg_json

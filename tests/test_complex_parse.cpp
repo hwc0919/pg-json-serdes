@@ -4,21 +4,21 @@
 #include "common.h"
 #include <iostream>
 #include <nlohmann/json.hpp>
-#include <pfs/Catalogue.h>
-#include <pfs/PgFunc.h>
-#include <pfs/utils/GeneralParamSetter.h>
-#include <pfs/utils/PgResultWrapper.h>
-#include <pfs/utils/PgTextReader.h>
-#include <pfs/utils/PgTextWriter.h>
-#include <pfs/utils/RawCursor.h>
-#include <pfs/utils/StringBuffer.h>
+#include <pg_json/Catalogue.h>
+#include <pg_json/PgFunc.h>
+#include <pg_json/utils/GeneralParamSetter.h>
+#include <pg_json/utils/PgResultWrapper.h>
+#include <pg_json/utils/PgTextReader.h>
+#include <pg_json/utils/PgTextWriter.h>
+#include <pg_json/utils/RawCursor.h>
+#include <pg_json/utils/StringBuffer.h>
 
 int main()
 {
-    auto catalogue = pfs::Catalogue::createFromDbConnInfo(getTestDbUri());
+    auto catalogue = pg_json::Catalogue::createFromDbConnInfo(getTestDbUri());
 
-    auto funcs = catalogue->findFunctions("public", "pfs_echo_complex");
-    std::cout << "Find " << funcs.size() << " functions by public.pfs_echo_complex" << std::endl;
+    auto funcs = catalogue->findFunctions("public", "pj_echo_complex");
+    std::cout << "Find " << funcs.size() << " functions by public.pj_echo_complex" << std::endl;
     if (funcs.empty())
     {
         return 1;
@@ -43,8 +43,8 @@ int main()
         { "people", { person } }
     };
     std::cout << "Input json: " << req.dump() << std::endl;
-    pfs::GeneralParamSetter setter;
-    pfs::PgFunc::parseJsonToParams(req, *func, setter, pfs::PgTextWriter(), pfs::StringBuffer());
+    pg_json::GeneralParamSetter setter;
+    pg_json::PgFunc::parseJsonToParams(req, *func, setter, pg_json::PgTextWriter(), pg_json::StringBuffer());
     std::cout << "Pg params:" << std::endl;
     printParams(*func, setter);
 
@@ -53,8 +53,8 @@ int main()
     std::cout << "Pg result:" << std::endl;
     printResults(*func, *res);
 
-    pfs::PgTextReader reader;
-    pfs::RawCursor cursor;
-    auto resJson = pfs::PgFunc::parseResultToJson(*func, *res, reader, cursor);
+    pg_json::PgTextReader reader;
+    pg_json::RawCursor cursor;
+    auto resJson = pg_json::PgFunc::parseResultToJson(*func, *res, reader, cursor);
     std::cout << "Result json: " << resJson.dump() << std::endl;
 }

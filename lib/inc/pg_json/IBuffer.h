@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <string>
 
-namespace pfs
+namespace pg_json
 {
 class IBuffer
 {
@@ -21,4 +21,4 @@ public:
     virtual size_t size() const = 0;
 };
 
-} // namespace pfs
+} // namespace pg_json

@@ -2,10 +2,10 @@
 #include <cstdlib>
 #include <iostream>
 #include <libpq-fe.h>
-#include <pfs/IResult.h>
-#include <pfs/PgFunc.h>
-#include <pfs/utils/GeneralParamSetter.h>
-#include <pfs/utils/PgResultWrapper.h>
+#include <pg_json/IResult.h>
+#include <pg_json/PgFunc.h>
+#include <pg_json/utils/GeneralParamSetter.h>
+#include <pg_json/utils/PgResultWrapper.h>
 #include <string>
 
 inline std::string getTestDbUri()
@@ -14,7 +14,7 @@ inline std::string getTestDbUri()
     return dbUrl;
 }
 
-inline void printPgFunc(const pfs::PgFunc & func)
+inline void printPgFunc(const pg_json::PgFunc & func)
 {
     std::cout << func.namespace_() << "." << func.name() << "(";
     for (size_t i = 0; i != func.in_size(); ++i)
@@ -57,7 +57,7 @@ inline std::string binaryStringToHex(const unsigned char * ptr, size_t length)
     return hexStr;
 }
 
-inline void printParams(const pfs::PgFunc & func, const pfs::GeneralParamSetter & setter)
+inline void printParams(const pg_json::PgFunc & func, const pg_json::GeneralParamSetter & setter)
 {
     auto & params = setter.getParamValues();
     auto & paramLens = setter.getParamLens();
@@ -76,7 +76,7 @@ inline void printParams(const pfs::PgFunc & func, const pfs::GeneralParamSetter 
     }
 }
 
-inline void printResults(const pfs::PgFunc & func, const pfs::IResult & result)
+inline void printResults(const pg_json::PgFunc & func, const pg_json::IResult & result)
 {
     for (size_t i = 0; i != func.out_size(); ++i)
     {
@@ -84,7 +84,7 @@ inline void printResults(const pfs::PgFunc & func, const pfs::IResult & result)
     }
 }
 
-inline std::shared_ptr<pfs::PgResultWrapper> execSql(const pfs::PgFunc & func, const pfs::GeneralParamSetter & setter)
+inline std::shared_ptr<pg_json::PgResultWrapper> execSql(const pg_json::PgFunc & func, const pg_json::GeneralParamSetter & setter)
 {
     std::shared_ptr<PGconn> connPtr(PQconnectdb(getTestDbUri().c_str()), [](PGconn * conn) {
         if (conn) {
@@ -108,7 +108,7 @@ inline std::shared_ptr<pfs::PgResultWrapper> execSql(const pfs::PgFunc & func, c
     {
         throw std::runtime_error(std::string("sql execute failed. ") + PQerrorMessage(connPtr.get()));
     }
-    auto res = pfs::PgResultWrapper::wrap(r);
+    auto res = pg_json::PgResultWrapper::wrap(r);
     if (PQresultStatus(r) != PGRES_TUPLES_OK)
     {
         throw std::runtime_error(std::string("sql execute failed. ") + PQerrorMessage(connPtr.get()));

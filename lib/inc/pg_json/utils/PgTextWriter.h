@@ -2,9 +2,9 @@
 // Created by wanchen.he on 2023/1/9.
 //
 #pragma once
-#include <pfs/IPgWriter.h>
+#include <pg_json/IPgWriter.h>
 
-namespace pfs
+namespace pg_json
 {
 class PgTextWriter : public IPgWriter
 {
@@ -47,4 +47,4 @@ protected:
     std::vector<ScopeMark> scopeStack_;
 };
 
-} // namespace pfs
+} // namespace pg_json

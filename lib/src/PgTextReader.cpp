@@ -2,9 +2,9 @@
 // Created by wanchen.he on 2023/1/11.
 //
 #include <cassert>
-#include <pfs/utils/PgTextReader.h>
+#include <pg_json/utils/PgTextReader.h>
 
-using namespace pfs;
+using namespace pg_json;
 
 #define CHECK_AND_ADVANCE_CH(cursor, ch)                             \
     do                                                               \

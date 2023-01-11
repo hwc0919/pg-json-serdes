@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pfs
+namespace pg_json
 {
 inline const char * getMetaSql()
 {
@@ -10,4 +10,4 @@ inline const char * getMetaSql()
 
     return metaSql;
 }
-} // namespace pfs
+} // namespace pg_json

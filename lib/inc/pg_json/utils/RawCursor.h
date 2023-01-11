@@ -4,9 +4,9 @@
 #pragma once
 
 #include <cassert>
-#include <pfs/Cursor.h>
+#include <pg_json/Cursor.h>
 
-namespace pfs
+namespace pg_json
 {
 class RawCursor : public Cursor
 {
@@ -45,4 +45,4 @@ protected:
     size_t len_;
     size_t readOffset_{ 0 };
 };
-} // namespace pfs
+} // namespace pg_json

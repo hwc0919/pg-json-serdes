@@ -1,13 +1,13 @@
 #pragma once
 #include <nlohmann/json.hpp>
-#include <pfs/Cursor.h>
-#include <pfs/IBuffer.h>
-#include <pfs/IParamSetter.h>
-#include <pfs/IPgReader.h>
-#include <pfs/IPgWriter.h>
-#include <pfs/IResult.h>
+#include <pg_json/Cursor.h>
+#include <pg_json/IBuffer.h>
+#include <pg_json/IParamSetter.h>
+#include <pg_json/IPgReader.h>
+#include <pg_json/IPgWriter.h>
+#include <pg_json/IResult.h>
 
-namespace pfs
+namespace pg_json
 {
 
 class PgFunc
@@ -38,4 +38,4 @@ public:
     virtual const std::string & out_type_name(size_t i) const = 0;
 };
 
-} // namespace pfs
+} // namespace pg_json

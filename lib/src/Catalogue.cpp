@@ -3,11 +3,11 @@
 //
 
 #include "CatalogueImpl.h"
-#include <pfs/Catalogue.h>
-#include <pfs/IResult.h>
+#include <pg_json/Catalogue.h>
+#include <pg_json/IResult.h>
 #include <stdexcept>
 
-using namespace pfs;
+using namespace pg_json;
 
 Catalogue::~Catalogue() = default;
 
@@ -21,7 +21,7 @@ std::shared_ptr<Catalogue> Catalogue::createFromMetaResult(std::shared_ptr<IResu
 #if USE_LIBPQ || true
 #include "MetaSql.h"
 #include <libpq-fe.h>
-#include <pfs/utils/PgResultWrapper.h>
+#include <pg_json/utils/PgResultWrapper.h>
 
 std::shared_ptr<Catalogue> Catalogue::createFromDbConnInfo(const std::string & connInfo)
 {

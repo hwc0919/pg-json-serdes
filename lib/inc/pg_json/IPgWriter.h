@@ -3,10 +3,10 @@
 //
 #pragma once
 #include <nlohmann/json.hpp>
-#include <pfs/IBuffer.h>
-#include <pfs/PgType.h>
+#include <pg_json/IBuffer.h>
+#include <pg_json/PgType.h>
 
-namespace pfs
+namespace pg_json
 {
 class IPgWriter
 {
@@ -36,4 +36,4 @@ public:
     virtual void writeNullField(const PgType & fieldType, IBuffer & buf) = 0;
 };
 
-} // namespace pfs
+} // namespace pg_json
