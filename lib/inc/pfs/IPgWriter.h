@@ -25,7 +25,7 @@ public:
     virtual void writeArrayStart(const PgType & elemType, size_t len, IBuffer & buf) = 0;
     virtual void writeArrayEnd(IBuffer & buf) = 0;
     virtual void writeElementStart(IBuffer & buf, bool needQuote) = 0;
-    virtual void writeSeperator(IBuffer & buf) = 0;
+    virtual void writeElementSeperator(IBuffer & buf) = 0;
     virtual void writeElementEnd(IBuffer & buf) = 0;
 
     virtual void writeCompositeStart(const PgType & type, IBuffer & buf) = 0;

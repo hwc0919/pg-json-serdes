@@ -227,7 +227,7 @@ void pfs::PgTextWriter::writeElementStart(pfs::IBuffer & buf, bool needQuote)
     scopeStack_.push_back(std::move(scope));
 }
 
-void pfs::PgTextWriter::writeSeperator(pfs::IBuffer & buf)
+void pfs::PgTextWriter::writeElementSeperator(pfs::IBuffer & buf)
 {
     buf.append(1, ',');
 }
@@ -269,7 +269,7 @@ void pfs::PgTextWriter::writeCompositeStart(const pfs::PgType & type, pfs::IBuff
         }
         else
         {
-            throw std::runtime_error("Invalid array start");
+            throw std::runtime_error("Invalid composite start");
         }
     }
     scopeStack_.push_back(std::move(scope));
@@ -338,9 +338,9 @@ void pfs::PgTextWriter::writeUnescapedString(const std::string & str, pfs::IBuff
         buf.append(str);
         return;
     }
+    const ScopeMark & upperScope = scopeStack_.back();
     for (char c : str)
     {
-        const ScopeMark & upperScope = scopeStack_.back();
         switch (c) {
             case '"': {
                 if (upperScope.type == ScopeType::CompositeField)

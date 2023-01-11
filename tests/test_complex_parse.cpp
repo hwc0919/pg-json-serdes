@@ -8,7 +8,9 @@
 #include <pfs/PgFunc.h>
 #include <pfs/utils/GeneralParamSetter.h>
 #include <pfs/utils/PgResultWrapper.h>
+#include <pfs/utils/PgTextReader.h>
 #include <pfs/utils/PgTextWriter.h>
+#include <pfs/utils/RawCursor.h>
 #include <pfs/utils/StringBuffer.h>
 
 int main()
@@ -24,8 +26,6 @@ int main()
 
     auto & func = funcs[0];
     printPgFunc(*func);
-
-    pfs::GeneralParamSetter setter;
 
     std::string name = "Nitromelon";
     int age = 27;
@@ -43,6 +43,7 @@ int main()
         { "people", { person } }
     };
     std::cout << "Input json: " << req.dump() << std::endl;
+    pfs::GeneralParamSetter setter;
     pfs::PgFunc::parseJsonToParams(req, *func, setter, pfs::PgTextWriter(), pfs::StringBuffer());
     std::cout << "Pg params:" << std::endl;
     printParams(*func, setter);
@@ -51,4 +52,9 @@ int main()
     assert(res->rows() == 1 && res->columns() == 2);
     std::cout << "Pg result:" << std::endl;
     printResults(*func, *res);
+
+    pfs::PgTextReader reader;
+    pfs::RawCursor cursor;
+    auto resJson = pfs::PgFunc::parseResultToJson(*func, *res, reader, cursor);
+    std::cout << "Result json: " << resJson.dump() << std::endl;
 }

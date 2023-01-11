@@ -14,16 +14,27 @@ target_include_directories(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
         PRIVATE ${CMAKE_SOURCE_DIR}/lib/src)
 aux_source_directory(${CMAKE_SOURCE_DIR}/lib/src SRC_DIR)
-target_sources(${PROJECT_NAME}
-        PRIVATE
-        ${SRC_DIR})
 
-#
-#set(public_headers
-#        lib/inc/pfs/Catalogue.h
-#        lib/inc/pfs/IResult.h
-#        lib/inc/pfs/PgFunc.h)
-#
+set(public_headers
+        lib/inc/pfs/PgField.h
+        lib/inc/pfs/PgType.h
+        lib/inc/pfs/PgFunc.h
+        lib/inc/pfs/Catalogue.h
+        lib/inc/pfs/IBuffer.h
+        lib/inc/pfs/Cursor.h
+        lib/inc/pfs/IParamSetter.h
+        lib/inc/pfs/IResult.h
+        lib/inc/pfs/IPgReader.h
+        lib/inc/pfs/IPgWriter.h
+
+        lib/inc/pfs/utils/GeneralParamSetter.h
+        lib/inc/pfs/utils/PgResultWrapper.h
+        lib/inc/pfs/utils/PgTextReader.h
+        lib/inc/pfs/utils/PgTextWriter.h
+        lib/inc/pfs/utils/RawCursor.h
+        lib/inc/pfs/utils/StringBuffer.h
+        )
+
 #set(private_headers
 #        lib/src/CatalogueImpl.h)
 #
@@ -32,6 +43,11 @@ target_sources(${PROJECT_NAME}
 #        ${private_headers}
 #        lib/src/Catalogue.cpp
 #        lib/src/CatalogueImpl.cpp)
+
+target_sources(${PROJECT_NAME}
+        PRIVATE
+        ${public_headers}
+        ${SRC_DIR})
 
 find_package(PostgreSQL REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE PostgreSQL::PostgreSQL)

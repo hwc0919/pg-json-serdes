@@ -1,8 +1,11 @@
 #pragma once
 #include <nlohmann/json.hpp>
+#include <pfs/Cursor.h>
 #include <pfs/IBuffer.h>
 #include <pfs/IParamSetter.h>
+#include <pfs/IPgReader.h>
 #include <pfs/IPgWriter.h>
+#include <pfs/IResult.h>
 
 namespace pfs
 {
@@ -19,7 +22,7 @@ public:
     {
         parseJsonToParams(obj, func, setter, writer, buffer);
     }
-    // static nlohmann::json parseResultToJson(const PgFunc & func, const IResult & result, IPgReader & reader);
+    static nlohmann::json parseResultToJson(const PgFunc & func, const IResult & result, IPgReader & reader, Cursor & cursor);
 
     virtual const std::string & namespace_() const = 0;
     virtual const std::string & name() const = 0;

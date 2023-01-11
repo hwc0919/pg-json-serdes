@@ -14,7 +14,7 @@ public:
     void writeArrayStart(const PgType & elemType, size_t len, IBuffer & buf) override;
     void writeArrayEnd(IBuffer & buf) override;
     void writeElementStart(IBuffer & buf, bool needQuote) override;
-    void writeSeperator(IBuffer & buf) override;
+    void writeElementSeperator(IBuffer & buf) override;
     void writeElementEnd(IBuffer & buf) override;
     void writeCompositeStart(const PgType & type, IBuffer & buf) override;
     void writeCompositeEnd(IBuffer & buf) override;
