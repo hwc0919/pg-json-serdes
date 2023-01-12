@@ -23,5 +23,6 @@ struct ScopeMark
     bool quoted{ false };
     std::string quote;
     size_t offset{ 0 }; // for binary
+    size_t len{ 0 };    // for binary array
 };
 } // namespace pg_json

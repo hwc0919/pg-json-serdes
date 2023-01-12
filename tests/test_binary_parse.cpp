@@ -50,12 +50,12 @@ int main()
     std::cout << "Pg params:" << std::endl;
     printParams(*func, setter);
 
-    auto res = execSql(*func, setter);
+    auto res = execSql(*func, setter, 1);
     assert(res->rows() == 1 && res->columns() == 2);
     std::cout << "Pg result:" << std::endl;
     printResults(*func, *res);
 
-    auto reader = pg_json::PgReader::newTextReader();
+    auto reader = pg_json::PgReader::newBinaryReader();
     auto cursor = pg_json::RawCursor();
     auto resJson = pg_json::PgFunc::parseResultToJson(*func, *res, *reader, cursor);
     std::cout << "Result json: " << resJson.dump() << std::endl;

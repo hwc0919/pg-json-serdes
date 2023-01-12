@@ -25,5 +25,8 @@ public:
     void readFieldStart(const PgType & fieldType, Cursor & cursor) override;
     void readFieldSeparator(Cursor & cursor) override;
     void readFieldEnd(Cursor & cursor) override;
+
+private:
+    std::vector<ScopeMark> scopeStack_;
 };
 } // namespace pg_json
