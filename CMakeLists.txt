@@ -28,21 +28,25 @@ set(public_headers
         lib/inc/pg_json/PgWriter.h
         lib/inc/pg_json/utils/GeneralParamSetter.h
         lib/inc/pg_json/utils/PgResultWrapper.h
-        lib/inc/pg_json/utils/PgTextReader.h
-        lib/inc/pg_json/utils/PgTextWriter.h
         lib/inc/pg_json/utils/RawCursor.h
         lib/inc/pg_json/utils/StringBuffer.h)
 
 set(private_headers
         lib/src/MetaSql.h
+        lib/src/Scope.h
         lib/src/PgFuncImpl.h
-        lib/src/CatalogueImpl.h)
+        lib/src/CatalogueImpl.h
+        lib/src/PgTextReader.h
+        lib/src/PgTextWriter.h
+        )
 
 set(PJ_SRC
         lib/src/Catalogue.cpp
         lib/src/CatalogueImpl.cpp
         lib/src/PgFunc.cpp
         lib/src/PgFuncImpl.cpp
+        lib/src/PgReader.cpp
+        lib/src/PgWriter.cpp
         lib/src/PgTextReader.cpp
         lib/src/PgTextWriter.cpp)
 

@@ -11,6 +11,11 @@ namespace pg_json
 class PgReader
 {
 public:
+    // Create a reader that reads postgres text encodings to json
+    static std::shared_ptr<PgReader> newTextReader();
+    // Create a reader that reads postgres binary encodings to json
+    static std::shared_ptr<PgReader> newBinaryReader();
+
     virtual ~PgReader() = default;
     virtual nlohmann::json readPrimitive(const PgType & type, Cursor & cursor) = 0;
 

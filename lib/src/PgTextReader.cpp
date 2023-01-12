@@ -1,8 +1,8 @@
 //
 // Created by wanchen.he on 2023/1/11.
 //
+#include "PgTextReader.h"
 #include <cassert>
-#include <pg_json/utils/PgTextReader.h>
 
 using namespace pg_json;
 
@@ -153,7 +153,7 @@ void PgTextReader::readElementStart(Cursor & cursor)
     if (cursor.remains() >= upperScope.quote.size() && 0 == strncmp(cursor.peek(), upperScope.quote.c_str(), upperScope.quote.size()))
     {
         cursor.advance(upperScope.quote.size());
-        scope.has_quote = true;
+        scope.quoted = true;
     }
     scopeStack_.push_back(std::move(scope));
 }
@@ -172,7 +172,7 @@ void PgTextReader::readElementEnd(Cursor & cursor)
     ScopeMark scope = std::move(scopeStack_.back());
     scopeStack_.pop_back();
     assert(!scopeStack_.empty() && scopeStack_.back().type == ScopeType::Array);
-    if (scope.has_quote)
+    if (scope.quoted)
     {
         CHECK_AND_ADVANCE_LEN(cursor, scope.quote.size());
     }
@@ -229,7 +229,7 @@ void PgTextReader::readFieldStart(const PgType & fieldType, Cursor & cursor)
         && 0 == strncmp(cursor.peek(), upperScope.quote.c_str(), upperScope.quote.size()))
     {
         cursor.advance(upperScope.quote.size());
-        scope.has_quote = true;
+        scope.quoted = true;
     }
     scopeStack_.push_back(std::move(scope));
 }
@@ -249,7 +249,7 @@ void PgTextReader::readFieldEnd(Cursor & cursor)
     scopeStack_.pop_back();
     assert(!scopeStack_.empty() && scopeStack_.back().type == ScopeType::Composite);
 
-    if (scope.has_quote)
+    if (scope.quoted)
     {
         CHECK_AND_ADVANCE_LEN(cursor, scope.quote.size());
     }
@@ -268,7 +268,7 @@ std::string PgTextReader::readWholeField(Cursor & cursor) const
     else
     {
         auto & upperScope = scopeStack_.back();
-        if (upperScope.has_quote)
+        if (upperScope.quoted)
         { // read until quote
             str = readUntilEqual(cursor, upperScope.quote);
         }
@@ -299,7 +299,7 @@ std::string PgTextReader::readUnescapedString(Cursor & cursor) const
     }
     const ScopeMark & upperScope = scopeStack_.back();
     assert(upperScope.type == ScopeType::ArrayElement || upperScope.type == ScopeType::CompositeField);
-    if (!upperScope.has_quote)
+    if (!upperScope.quoted)
     {
         return readWholeField(cursor);
     }

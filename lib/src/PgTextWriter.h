@@ -2,6 +2,7 @@
 // Created by wanchen.he on 2023/1/9.
 //
 #pragma once
+#include "Scope.h"
 #include <pg_json/PgWriter.h>
 
 namespace pg_json
@@ -25,24 +26,6 @@ public:
 
 protected:
     void writeUnescapedString(const std::string &, Buffer &);
-
-    enum class ScopeType
-    {
-        None,
-        Array,
-        ArrayElement,
-        Composite,
-        CompositeField
-    };
-
-    struct ScopeMark
-    {
-        explicit ScopeMark(ScopeType typ)
-            : type(typ){};
-        ScopeType type{ ScopeType::None };
-        bool need_quote{ false };
-        std::string quote;
-    };
 
     std::vector<ScopeMark> scopeStack_;
 };

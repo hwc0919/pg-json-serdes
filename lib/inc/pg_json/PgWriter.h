@@ -11,6 +11,11 @@ namespace pg_json
 class PgWriter
 {
 public:
+    // Create a writer that parse json to postgres text encodings
+    static std::shared_ptr<PgWriter> newTextWriter();
+    // Create a writer that parse json to postgres binary encodings
+    static std::shared_ptr<PgWriter> newBinaryWriter();
+
     virtual ~PgWriter() = default;
 
     virtual void writePrimitive(const PgType & pgType, const nlohmann::json & jsonParam, Buffer & buf) = 0;

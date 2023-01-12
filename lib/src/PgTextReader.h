@@ -2,7 +2,7 @@
 // Created by wanchen.he on 2023/1/11.
 //
 #pragma once
-
+#include "Scope.h"
 #include <pg_json/PgReader.h>
 
 namespace pg_json
@@ -26,24 +26,6 @@ public:
 protected:
     std::string readWholeField(Cursor & cursor) const;
     std::string readUnescapedString(Cursor & cursor) const;
-
-    enum class ScopeType
-    {
-        None,
-        Array,
-        ArrayElement,
-        Composite,
-        CompositeField
-    };
-
-    struct ScopeMark
-    {
-        explicit ScopeMark(ScopeType typ)
-            : type(typ){};
-        ScopeType type{ ScopeType::None };
-        bool has_quote{ false };
-        std::string quote;
-    };
 
     std::vector<ScopeMark> scopeStack_;
 };

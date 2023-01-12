@@ -6,10 +6,10 @@
 #include <nlohmann/json.hpp>
 #include <pg_json/Catalogue.h>
 #include <pg_json/PgFunc.h>
+#include <pg_json/PgReader.h>
+#include <pg_json/PgWriter.h>
 #include <pg_json/utils/GeneralParamSetter.h>
 #include <pg_json/utils/PgResultWrapper.h>
-#include <pg_json/utils/PgTextReader.h>
-#include <pg_json/utils/PgTextWriter.h>
 #include <pg_json/utils/RawCursor.h>
 #include <pg_json/utils/StringBuffer.h>
 
@@ -44,7 +44,9 @@ int main()
     };
     std::cout << "Input json: " << req.dump() << std::endl;
     pg_json::GeneralParamSetter setter;
-    pg_json::PgFunc::parseJsonToParams(req, *func, setter, pg_json::PgTextWriter(), pg_json::StringBuffer());
+    auto writer = pg_json::PgWriter::newTextWriter();
+    auto buffer = pg_json::StringBuffer();
+    pg_json::PgFunc::parseJsonToParams(req, *func, setter, *writer, buffer);
     std::cout << "Pg params:" << std::endl;
     printParams(*func, setter);
 
@@ -53,8 +55,8 @@ int main()
     std::cout << "Pg result:" << std::endl;
     printResults(*func, *res);
 
-    pg_json::PgTextReader reader;
-    pg_json::RawCursor cursor;
-    auto resJson = pg_json::PgFunc::parseResultToJson(*func, *res, reader, cursor);
+    auto reader = pg_json::PgReader::newTextReader();
+    auto cursor = pg_json::RawCursor();
+    auto resJson = pg_json::PgFunc::parseResultToJson(*func, *res, *reader, cursor);
     std::cout << "Result json: " << resJson.dump() << std::endl;
 }
