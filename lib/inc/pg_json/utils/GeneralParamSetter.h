@@ -4,7 +4,7 @@
 #pragma once
 
 #include <memory>
-#include <pg_json/IParamSetter.h>
+#include <pg_json/PgParamSetter.h>
 #include <string>
 #include <vector>
 
@@ -14,7 +14,7 @@ namespace pg_json
 /**
  * Default implementation of IParamSetter
  */
-struct GeneralParamSetter : public IParamSetter
+struct GeneralParamSetter : public PgParamSetter
 {
 public:
     void setSize(size_t n) override

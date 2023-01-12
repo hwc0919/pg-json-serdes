@@ -2,7 +2,7 @@
 // Created by wanchen.he on 2023/1/8.
 //
 #include "PgFuncImpl.h"
-#include <pg_json/IBuffer.h>
+#include <pg_json/Buffer.h>
 #include <pg_json/PgType.h>
 
 using namespace pg_json;

@@ -1,11 +1,11 @@
 #pragma once
 #include <nlohmann/json.hpp>
 #include <pg_json/Cursor.h>
-#include <pg_json/IBuffer.h>
-#include <pg_json/IParamSetter.h>
-#include <pg_json/IPgReader.h>
-#include <pg_json/IPgWriter.h>
-#include <pg_json/IResult.h>
+#include <pg_json/Buffer.h>
+#include <pg_json/PgParamSetter.h>
+#include <pg_json/PgReader.h>
+#include <pg_json/PgWriter.h>
+#include <pg_json/PgResult.h>
 
 namespace pg_json
 {
@@ -16,14 +16,14 @@ public:
     using Oid = unsigned int;
     virtual ~PgFunc() = default;
 
-    static void parseJsonToParams(const nlohmann::json & obj, const PgFunc & func, IParamSetter & setter, IPgWriter & writer, IBuffer & buffer);
+    static void parseJsonToParams(const nlohmann::json & obj, const PgFunc & func, PgParamSetter & setter, PgWriter & writer, Buffer & buffer);
     // overload to take right values
-    static void parseJsonToParams(const nlohmann::json & obj, const PgFunc & func, IParamSetter & setter, IPgWriter && writer, IBuffer && buffer)
+    static void parseJsonToParams(const nlohmann::json & obj, const PgFunc & func, PgParamSetter & setter, PgWriter && writer, Buffer && buffer)
     {
         parseJsonToParams(obj, func, setter, writer, buffer);
     }
-    static nlohmann::json parseResultToJson(const PgFunc & func, const IResult & result, IPgReader & reader, Cursor & cursor);
-    static nlohmann::json parseResultToJson(const PgFunc & func, const IResult & result, IPgReader && reader, Cursor && cursor)
+    static nlohmann::json parseResultToJson(const PgFunc & func, const PgResult & result, PgReader & reader, Cursor & cursor);
+    static nlohmann::json parseResultToJson(const PgFunc & func, const PgResult & result, PgReader && reader, Cursor && cursor)
     {
         return parseResultToJson(func, result, reader, cursor);
     }

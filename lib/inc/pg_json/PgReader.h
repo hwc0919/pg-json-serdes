@@ -8,10 +8,10 @@
 
 namespace pg_json
 {
-class IPgReader
+class PgReader
 {
 public:
-    virtual ~IPgReader() = default;
+    virtual ~PgReader() = default;
     virtual nlohmann::json readPrimitive(const PgType & type, Cursor & cursor) = 0;
 
     virtual void readArrayStart(const PgType & elemType, Cursor & cursor) = 0;

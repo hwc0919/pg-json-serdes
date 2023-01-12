@@ -1,11 +1,11 @@
 #pragma once
 
-#include <pg_json/IBuffer.h>
+#include <pg_json/Buffer.h>
 #include <string>
 
 namespace pg_json
 {
-class StringBuffer : public IBuffer
+class StringBuffer : public Buffer
 {
 public:
     void clear() override

@@ -3,11 +3,11 @@
 //
 #pragma once
 
-#include <pg_json/IPgReader.h>
+#include <pg_json/PgReader.h>
 
 namespace pg_json
 {
-class PgTextReader : public IPgReader
+class PgTextReader : public PgReader
 {
 public:
     nlohmann::json readPrimitive(const PgType & type, Cursor & cursor) override;

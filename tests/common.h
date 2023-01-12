@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <libpq-fe.h>
-#include <pg_json/IResult.h>
+#include <pg_json/PgResult.h>
 #include <pg_json/PgFunc.h>
 #include <pg_json/utils/GeneralParamSetter.h>
 #include <pg_json/utils/PgResultWrapper.h>
@@ -76,7 +76,7 @@ inline void printParams(const pg_json::PgFunc & func, const pg_json::GeneralPara
     }
 }
 
-inline void printResults(const pg_json::PgFunc & func, const pg_json::IResult & result)
+inline void printResults(const pg_json::PgFunc & func, const pg_json::PgResult & result)
 {
     for (size_t i = 0; i != func.out_size(); ++i)
     {

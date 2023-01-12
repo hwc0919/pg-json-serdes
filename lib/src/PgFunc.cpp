@@ -1,8 +1,8 @@
 //
 // Created by wanchen.he on 2023/1/10.
 //
-#include <pg_json/IBuffer.h>
-#include <pg_json/IParamSetter.h>
+#include <pg_json/Buffer.h>
+#include <pg_json/PgParamSetter.h>
 #include <pg_json/PgFunc.h>
 #include <string>
 
@@ -45,9 +45,9 @@ protected:
     size_t readOffset_{ 0 };
 };
 
-static void serialize(const PgType & pgType, const nlohmann::json & param, IPgWriter & writer, IBuffer & buffer);
+static void serialize(const PgType & pgType, const nlohmann::json & param, PgWriter & writer, Buffer & buffer);
 
-void pg_json::PgFunc::parseJsonToParams(const nlohmann::json & obj, const pg_json::PgFunc & func, pg_json::IParamSetter & setter, pg_json::IPgWriter & writer, IBuffer & buffer)
+void pg_json::PgFunc::parseJsonToParams(const nlohmann::json & obj, const pg_json::PgFunc & func, pg_json::PgParamSetter & setter, pg_json::PgWriter & writer, Buffer & buffer)
 {
     setter.setSize(func.in_size());
     for (size_t idx = 0; idx != func.in_size(); ++idx)
@@ -72,7 +72,7 @@ void pg_json::PgFunc::parseJsonToParams(const nlohmann::json & obj, const pg_jso
     }
 }
 
-static void serialize(const PgType & pgType, const nlohmann::json & param, IPgWriter & writer, IBuffer & buffer)
+static void serialize(const PgType & pgType, const nlohmann::json & param, PgWriter & writer, Buffer & buffer)
 {
     if (pgType.isPrimitive())
     {
@@ -142,7 +142,7 @@ static void serialize(const PgType & pgType, const nlohmann::json & param, IPgWr
     }
 }
 
-nlohmann::json deserialize(const PgType & pgType, IPgReader & reader, Cursor & cursor)
+nlohmann::json deserialize(const PgType & pgType, PgReader & reader, Cursor & cursor)
 {
     if (pgType.isPrimitive())
     {
@@ -199,7 +199,7 @@ nlohmann::json deserialize(const PgType & pgType, IPgReader & reader, Cursor & c
     }
 }
 
-nlohmann::json PgFunc::parseResultToJson(const PgFunc & func, const IResult & result, IPgReader & reader, Cursor & cursor)
+nlohmann::json PgFunc::parseResultToJson(const PgFunc & func, const PgResult & result, PgReader & reader, Cursor & cursor)
 {
     nlohmann::json root;
     for (size_t idx = 0; idx != func.out_size(); ++idx)

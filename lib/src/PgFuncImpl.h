@@ -3,7 +3,7 @@
 //
 #pragma once
 
-#include <pg_json/IPgWriter.h>
+#include <pg_json/PgWriter.h>
 #include <pg_json/PgField.h>
 #include <pg_json/PgFunc.h>
 #include <string>

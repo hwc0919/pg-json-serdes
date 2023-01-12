@@ -10,15 +10,16 @@
 namespace pg_json
 {
 class PgFunc;
-class IResult;
+class PgResult;
 class Catalogue
 {
 public:
-    static std::shared_ptr<Catalogue> createFromMetaResult(std::shared_ptr<IResult> result);
+    static std::shared_ptr<Catalogue> createFromMetaResult(std::shared_ptr<PgResult> result);
 
 #if USE_LIBPQ || true
     static std::shared_ptr<Catalogue> createFromDbConnInfo(const std::string & connInfo);
 #endif
+    static const char * getMetaSql();
 
     virtual ~Catalogue();
     virtual std::vector<std::shared_ptr<PgFunc>> findFunctions(const std::string & nsp, const std::string & name) = 0;

@@ -14,7 +14,7 @@ class PgFuncImpl;
 class CatalogueImpl : public Catalogue
 {
 public:
-    explicit CatalogueImpl(std::shared_ptr<IResult> meta_res);
+    explicit CatalogueImpl(std::shared_ptr<PgResult> meta_res);
     void parseMeta();
 
     std::vector<std::shared_ptr<PgFunc>> findFunctions(const std::string & nsp, const std::string & name) override;
@@ -39,7 +39,7 @@ private:
 
     void prepareFunctions();
 
-    std::shared_ptr<IResult> meta_res_;
+    std::shared_ptr<PgResult> meta_res_;
     bool parsed_{ false };
 
     std::vector<std::shared_ptr<PgType>> types_;

@@ -8,10 +8,10 @@
 
 namespace pg_json
 {
-class IBuffer
+class Buffer
 {
 public:
-    virtual ~IBuffer() = default;
+    virtual ~Buffer() = default;
     virtual void clear() = 0;
     virtual void append(const std::string & str) = 0;
     virtual void append(const char * data, size_t len) = 0;

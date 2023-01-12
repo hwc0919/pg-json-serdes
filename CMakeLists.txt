@@ -20,12 +20,12 @@ set(public_headers
         lib/inc/pg_json/PgType.h
         lib/inc/pg_json/PgFunc.h
         lib/inc/pg_json/Catalogue.h
-        lib/inc/pg_json/IBuffer.h
+        lib/inc/pg_json/Buffer.h
         lib/inc/pg_json/Cursor.h
-        lib/inc/pg_json/IParamSetter.h
-        lib/inc/pg_json/IResult.h
-        lib/inc/pg_json/IPgReader.h
-        lib/inc/pg_json/IPgWriter.h
+        lib/inc/pg_json/PgParamSetter.h
+        lib/inc/pg_json/PgResult.h
+        lib/inc/pg_json/PgReader.h
+        lib/inc/pg_json/PgWriter.h
         lib/inc/pg_json/utils/GeneralParamSetter.h
         lib/inc/pg_json/utils/PgResultWrapper.h
         lib/inc/pg_json/utils/PgTextReader.h

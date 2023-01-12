@@ -5,10 +5,10 @@
 
 namespace pg_json
 {
-class IResult
+class PgResult
 {
 public:
-    virtual ~IResult() = default;
+    virtual ~PgResult() = default;
     virtual size_t rows() const noexcept = 0;
     virtual size_t columns() const noexcept = 0;
     virtual bool isNull(size_t row, size_t col) const noexcept = 0;

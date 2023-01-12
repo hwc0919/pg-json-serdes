@@ -3,15 +3,16 @@
 //
 
 #include "CatalogueImpl.h"
+#include "MetaSql.h"
 #include <pg_json/Catalogue.h>
-#include <pg_json/IResult.h>
+#include <pg_json/PgResult.h>
 #include <stdexcept>
 
 using namespace pg_json;
 
 Catalogue::~Catalogue() = default;
 
-std::shared_ptr<Catalogue> Catalogue::createFromMetaResult(std::shared_ptr<IResult> result)
+std::shared_ptr<Catalogue> Catalogue::createFromMetaResult(std::shared_ptr<PgResult> result)
 {
     std::shared_ptr<CatalogueImpl> catalogue = std::make_shared<CatalogueImpl>(std::move(result));
     catalogue->parseMeta();
@@ -19,7 +20,6 @@ std::shared_ptr<Catalogue> Catalogue::createFromMetaResult(std::shared_ptr<IResu
 }
 
 #if USE_LIBPQ || true
-#include "MetaSql.h"
 #include <libpq-fe.h>
 #include <pg_json/utils/PgResultWrapper.h>
 
@@ -49,6 +49,11 @@ std::shared_ptr<Catalogue> Catalogue::createFromDbConnInfo(const std::string & c
     }
 
     return createFromMetaResult(std::move(res));
+}
+
+const char * Catalogue::getMetaSql()
+{
+    return pg_json::getMetaSql();
 }
 
 #endif

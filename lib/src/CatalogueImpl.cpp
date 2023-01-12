@@ -7,13 +7,13 @@
 
 #include <algorithm>
 #include <cassert>
-#include <pg_json/IResult.h>
+#include <pg_json/PgResult.h>
 #include <pg_json/PgField.h>
 #include <pg_json/PgType.h>
 #include <sstream>
 #include <stdexcept>
 
-pg_json::CatalogueImpl::CatalogueImpl(std::shared_ptr<IResult> meta_res)
+pg_json::CatalogueImpl::CatalogueImpl(std::shared_ptr<PgResult> meta_res)
     : meta_res_(std::move(meta_res))
 {
 }

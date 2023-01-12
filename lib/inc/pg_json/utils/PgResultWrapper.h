@@ -6,7 +6,7 @@
 #if USE_LIBPQ || true
 #include <libpq-fe.h>
 #include <memory>
-#include <pg_json/IResult.h>
+#include <pg_json/PgResult.h>
 
 namespace pg_json
 {
@@ -14,7 +14,7 @@ namespace pg_json
  * Wrap raw `PGresult` pointer.
  * Take the ownership of allocated memery, and provide eazy data access.
  */
-class PgResultWrapper : public IResult
+class PgResultWrapper : public PgResult
 {
 public:
     static std::shared_ptr<PgResultWrapper> wrap(PGresult * result)
