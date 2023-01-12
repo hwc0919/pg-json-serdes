@@ -1,6 +1,7 @@
 //
-// Created by wanchen.he on 2023/1/9.
+// Created by wanchen.he on 2023/1/12.
 //
+
 #pragma once
 #include <pg_json/PgWriter.h>
 
@@ -9,7 +10,7 @@
 
 namespace pg_json
 {
-class PgTextWriter : public PgWriter
+class PgBinaryWriter : public PgWriter
 {
 public:
     void writePrimitive(const PgType & pgType, const nlohmann::json & jsonParam, Buffer & buf) override;
@@ -26,10 +27,7 @@ public:
     void writeFieldEnd(Buffer & buf) override;
     void writeNullField(const PgType & fieldType, Buffer & buf) override;
 
-protected:
-    void writeUnescapedString(const std::string &, Buffer &);
-
+private:
     std::vector<ScopeMark> scopeStack_;
 };
-
 } // namespace pg_json

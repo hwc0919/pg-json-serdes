@@ -2,10 +2,19 @@
 
 Serialize between postgresql encodings and json. Support postgresql primitive types and user-defined composite types.
 
+## Features
+- Support postgresql composite types
+- Support postgresql binary encoding and text encoding.
+- Write pg function parameters from json, result can be used directly in `PQexecParams`
+- Read pg function result (`PGresult`) to json.
+- No dependencies, no schema files needed. Database metadata is fetched at runtime.
+- All component can be customized by inheriting from virtual base class.
+
 ## Example
 
 Load metadata from database, and parse json object into pg function parameters.
 
+Database elements:
 ```sql
 create type pj_person_t as (
     name        text,
@@ -26,6 +35,7 @@ begin
 end $$;
 ```
 
+Cpp code:
 ```cpp
 using namespace pg_json;
 
@@ -36,14 +46,18 @@ auto func = catalogue->findFunctions("public", "pj_echo_complex")[0];
 // Serialize parameters
 nlohmann::json req{/* ... */};
 GeneralParamSetter setter;
-PgFunc::parseJsonToParams(req, *func, setter, PgTextWriter(), StringBuffer());
+auto writer = PgWriter::newTextWriter();
+auto buffer = StringBuffer();
+PgFunc::parseJsonToParams(req, *func, setter, *writer, buffer);
 
 // Parse result
 auto res = execSql(*func, setter);
-assert(res->rows() == 1 && res->columns() == 2);
-auto resJson = pg_json::PgFunc::parseResultToJson(*func, *res, PgTextReader(), RawCursor());
+auto reader = PgReader::newTextReader();
+auto cursor = RawCursor();
+auto resJson = PgFunc::parseResultToJson(*func, *res, *reader, cursor);
 ```
 
+Output:
 ```text
 Input json: 
 {

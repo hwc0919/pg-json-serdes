@@ -330,7 +330,7 @@ void PgTextWriter::writeFieldEnd(Buffer & buf)
 
 void PgTextWriter::writeNullField(const PgType & fieldType, Buffer & buf)
 {
-    buf.append("null", 4);
+    // nothing to write
 }
 
 void PgTextWriter::writeUnescapedString(const std::string & str, Buffer & buf)

@@ -16,17 +16,8 @@ public:
     using Oid = unsigned int;
     virtual ~PgFunc() = default;
 
-    static void parseJsonToParams(const nlohmann::json & obj, const PgFunc & func, PgParamSetter & setter, PgWriter & writer, Buffer & buffer);
-    // overload to take right values
-    static void parseJsonToParams(const nlohmann::json & obj, const PgFunc & func, PgParamSetter & setter, PgWriter && writer, Buffer && buffer)
-    {
-        parseJsonToParams(obj, func, setter, writer, buffer);
-    }
+    static void parseJsonToParams(const nlohmann::json & obj, const PgFunc & func, PgParamSetter & setter, PgWriter & writer, Buffer & buffer, int format = 0);
     static nlohmann::json parseResultToJson(const PgFunc & func, const PgResult & result, PgReader & reader, Cursor & cursor);
-    static nlohmann::json parseResultToJson(const PgFunc & func, const PgResult & result, PgReader && reader, Cursor && cursor)
-    {
-        return parseResultToJson(func, result, reader, cursor);
-    }
 
     virtual const std::string & namespace_() const = 0;
     virtual const std::string & name() const = 0;

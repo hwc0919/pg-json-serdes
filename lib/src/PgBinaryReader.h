@@ -1,6 +1,7 @@
 //
-// Created by wanchen.he on 2023/1/11.
+// Created by wanchen.he on 2023/1/12.
 //
+
 #pragma once
 #include <pg_json/PgReader.h>
 
@@ -9,7 +10,7 @@
 
 namespace pg_json
 {
-class PgTextReader : public PgReader
+class PgBinaryReader : public PgReader
 {
 public:
     nlohmann::json readPrimitive(const PgType & type, Cursor & cursor) override;
@@ -19,16 +20,10 @@ public:
     void readElementStart(Cursor & cursor) override;
     void readElementSeperator(Cursor & cursor) override;
     void readElementEnd(Cursor & cursor) override;
-    void readCompositeStart(const PgType & type, Cursor & buf) override;
-    void readCompositeEnd(Cursor & buf) override;
-    void readFieldStart(const PgType & fieldType, Cursor & buf) override;
-    void readFieldSeparator(Cursor & buf) override;
-    void readFieldEnd(Cursor & buf) override;
-
-protected:
-    std::string readWholeField(Cursor & cursor) const;
-    std::string readUnescapedString(Cursor & cursor) const;
-
-    std::vector<ScopeMark> scopeStack_;
+    void readCompositeStart(const PgType & type, Cursor & cursor) override;
+    void readCompositeEnd(Cursor & cursor) override;
+    void readFieldStart(const PgType & fieldType, Cursor & cursor) override;
+    void readFieldSeparator(Cursor & cursor) override;
+    void readFieldEnd(Cursor & cursor) override;
 };
 } // namespace pg_json

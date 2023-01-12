@@ -38,7 +38,8 @@ set(private_headers
         lib/src/CatalogueImpl.h
         lib/src/PgTextReader.h
         lib/src/PgTextWriter.h
-        )
+        lib/src/PgBinaryReader.h
+        lib/src/PgBinaryWriter.h)
 
 set(PJ_SRC
         lib/src/Catalogue.cpp
@@ -48,7 +49,9 @@ set(PJ_SRC
         lib/src/PgReader.cpp
         lib/src/PgWriter.cpp
         lib/src/PgTextReader.cpp
-        lib/src/PgTextWriter.cpp)
+        lib/src/PgTextWriter.cpp
+        lib/src/PgBinaryReader.cpp
+        lib/src/PgBinaryWriter.cpp)
 
 target_sources(${PROJECT_NAME} PRIVATE
         ${public_headers}

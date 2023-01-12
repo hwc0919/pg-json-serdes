@@ -17,7 +17,7 @@ public:
     virtual void append(const char * data, size_t len) = 0;
     virtual void append(size_t n, char ch) = 0;
 
-    virtual const char * data() const = 0;
+    virtual char * data() const = 0;
     virtual size_t size() const = 0;
 };
 

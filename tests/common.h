@@ -84,7 +84,7 @@ inline void printResults(const pg_json::PgFunc & func, const pg_json::PgResult &
     }
 }
 
-inline std::shared_ptr<pg_json::PgResultWrapper> execSql(const pg_json::PgFunc & func, const pg_json::GeneralParamSetter & setter)
+inline std::shared_ptr<pg_json::PgResultWrapper> execSql(const pg_json::PgFunc & func, const pg_json::GeneralParamSetter & setter, int resultFormat = 0)
 {
     std::shared_ptr<PGconn> connPtr(PQconnectdb(getTestDbUri().c_str()), [](PGconn * conn) {
         if (conn) {
@@ -103,7 +103,7 @@ inline std::shared_ptr<pg_json::PgResultWrapper> execSql(const pg_json::PgFunc &
         setter.getParamValues().data(),
         setter.getParamLens().data(),
         setter.getParamFormats().data(),
-        0);
+        resultFormat);
     if (r == nullptr)
     {
         throw std::runtime_error(std::string("sql execute failed. ") + PQerrorMessage(connPtr.get()));

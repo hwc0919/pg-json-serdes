@@ -22,5 +22,6 @@ struct ScopeMark
     ScopeType type{ ScopeType::None };
     bool quoted{ false };
     std::string quote;
+    size_t offset{ 0 }; // for binary
 };
 } // namespace pg_json

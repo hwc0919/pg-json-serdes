@@ -24,9 +24,9 @@ public:
     {
         buf_.append(n, ch);
     }
-    const char * data() const override
+    char * data() const override
     {
-        return buf_.c_str();
+        return const_cast<char *>(buf_.data());
     }
     size_t size() const override
     {

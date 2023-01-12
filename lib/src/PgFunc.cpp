@@ -2,8 +2,8 @@
 // Created by wanchen.he on 2023/1/10.
 //
 #include <pg_json/Buffer.h>
-#include <pg_json/PgParamSetter.h>
 #include <pg_json/PgFunc.h>
+#include <pg_json/PgParamSetter.h>
 #include <string>
 
 using namespace pg_json;
@@ -47,7 +47,7 @@ protected:
 
 static void serialize(const PgType & pgType, const nlohmann::json & param, PgWriter & writer, Buffer & buffer);
 
-void pg_json::PgFunc::parseJsonToParams(const nlohmann::json & obj, const pg_json::PgFunc & func, pg_json::PgParamSetter & setter, pg_json::PgWriter & writer, Buffer & buffer)
+void pg_json::PgFunc::parseJsonToParams(const nlohmann::json & obj, const pg_json::PgFunc & func, pg_json::PgParamSetter & setter, pg_json::PgWriter & writer, Buffer & buffer, int format)
 {
     setter.setSize(func.in_size());
     for (size_t idx = 0; idx != func.in_size(); ++idx)
@@ -68,7 +68,7 @@ void pg_json::PgFunc::parseJsonToParams(const nlohmann::json & obj, const pg_jso
         }
         buffer.clear();
         serialize(*field.type_, jsonParam, writer, buffer);
-        setter.setParameter(idx, buffer.data(), buffer.size(), 0);
+        setter.setParameter(idx, buffer.data(), buffer.size(), format);
     }
 }
 
@@ -121,8 +121,10 @@ static void serialize(const PgType & pgType, const nlohmann::json & param, PgWri
             // TODO: set default handler?
             if (!param.contains(name))
             {
-                writer.writeFieldStart(fieldType, buffer, false);
-                writer.writeFieldEnd(buffer);
+                writer.writeNullField(*field.type_, buffer);
+                //writer.writeFieldStart(fieldType, buffer, false);
+                //writeDefaultValue(...)
+                //writer.writeFieldEnd(buffer);
                 continue;
             }
             auto & fieldParam = param[name];
