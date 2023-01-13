@@ -1,78 +1,13 @@
-//
-// Created by wanchen.he on 2023/1/10.
-//
-#include <pg_json/Buffer.h>
-#include <pg_json/PgFunc.h>
-#include <pg_json/PgParamSetter.h>
-#include <string>
-
+#include "ConverterImpl.h"
+#include <pg_json/Converter.h>
 using namespace pg_json;
 
-class RawCursor
+std::shared_ptr<Converter> Converter::newConverter(PgFormat format)
 {
-public:
-    RawCursor(const char * data, size_t len)
-        : data_(data), len_(len)
-    {
-    }
-
-    const char * peek() const
-    {
-        return data_ + readOffset_;
-    }
-    size_t offset() const
-    {
-        return readOffset_;
-    }
-    size_t remains() const
-    {
-        return len_ - readOffset_;
-    }
-    void seek(size_t offset)
-    {
-        assert(offset < len_);
-        readOffset_ = offset;
-    }
-    void advance(size_t step)
-    {
-        assert(readOffset_ + step <= len_);
-        readOffset_ += step;
-    }
-
-protected:
-    const char * data_;
-    size_t len_;
-    size_t readOffset_{ 0 };
-};
-
-static void serialize(const PgType & pgType, const nlohmann::json & param, PgWriter & writer, Buffer & buffer);
-
-void pg_json::PgFunc::parseJsonToParams(const nlohmann::json & obj, const pg_json::PgFunc & func, pg_json::PgParamSetter & setter, pg_json::PgWriter & writer, Buffer & buffer, int format)
-{
-    setter.setSize(func.in_size());
-    for (size_t idx = 0; idx != func.in_size(); ++idx)
-    {
-        auto & field = func.in_field(idx);
-        const std::string & name = field.name_;
-
-        // Ignore non-exist field
-        if (!obj.contains(name))
-        {
-            continue;
-        }
-        auto & jsonParam = obj[name];
-        // No need to set null
-        if (jsonParam.is_null())
-        {
-            continue;
-        }
-        buffer.clear();
-        serialize(*field.type_, jsonParam, writer, buffer);
-        setter.setParameter(idx, buffer.data(), buffer.size(), format);
-    }
+    return std::make_shared<ConverterImpl>(format);
 }
 
-static void serialize(const PgType & pgType, const nlohmann::json & param, PgWriter & writer, Buffer & buffer)
+void Converter::parseJsonToPg(const PgType & pgType, const json_t & param, PgWriter & writer, Buffer & buffer)
 {
     if (pgType.isPrimitive())
     {
@@ -91,11 +26,11 @@ static void serialize(const PgType & pgType, const nlohmann::json & param, PgWri
             {
                 writer.writeElementSeperator(buffer);
             }
-            const nlohmann::json & jsonElem = param.is_array() ? param[i] : param;
+            const json_t & jsonElem = param.is_array() ? param[i] : param;
             bool needQuote = writer.needQuote(elemType, jsonElem);
             writer.writeElementStart(buffer, needQuote);
             // recurse
-            serialize(elemType, jsonElem, writer, buffer);
+            parseJsonToPg(elemType, jsonElem, writer, buffer);
             writer.writeElementEnd(buffer);
         }
         writer.writeArrayEnd(buffer);
@@ -122,9 +57,9 @@ static void serialize(const PgType & pgType, const nlohmann::json & param, PgWri
             if (!param.contains(name))
             {
                 writer.writeNullField(*field.type_, buffer);
-                //writer.writeFieldStart(fieldType, buffer, false);
-                //writeDefaultValue(...)
-                //writer.writeFieldEnd(buffer);
+                // writer.writeFieldStart(fieldType, buffer, false);
+                // writeDefaultValue(...)
+                // writer.writeFieldEnd(buffer);
                 continue;
             }
             auto & fieldParam = param[name];
@@ -137,14 +72,14 @@ static void serialize(const PgType & pgType, const nlohmann::json & param, PgWri
             bool needQuote = writer.needQuote(fieldType, fieldParam);
             writer.writeFieldStart(fieldType, buffer, needQuote);
             // recurse
-            serialize(fieldType, fieldParam, writer, buffer);
+            parseJsonToPg(fieldType, fieldParam, writer, buffer);
             writer.writeFieldEnd(buffer);
         }
         writer.writeCompositeEnd(buffer);
     }
 }
 
-nlohmann::json deserialize(const PgType & pgType, PgReader & reader, Cursor & cursor)
+json_t Converter::parsePgToJson(const PgType & pgType, PgReader & reader, Cursor & cursor)
 {
     if (pgType.isPrimitive())
     {
@@ -153,7 +88,7 @@ nlohmann::json deserialize(const PgType & pgType, PgReader & reader, Cursor & cu
     else if (pgType.isArray())
     {
         assert(pgType.elem_type_);
-        nlohmann::json arr(nlohmann::json::value_t::array);
+        json_t arr(json_t::value_t::array);
 
         const PgType & elemType = *pgType.elem_type_;
         reader.readArrayStart(elemType, cursor);
@@ -167,7 +102,7 @@ nlohmann::json deserialize(const PgType & pgType, PgReader & reader, Cursor & cu
             }
             // recurse
             reader.readElementStart(cursor);
-            nlohmann::json elem = deserialize(elemType, reader, cursor);
+            json_t elem = parsePgToJson(elemType, reader, cursor);
             arr.push_back(std::move(elem));
             reader.readElementEnd(cursor);
         }
@@ -176,7 +111,7 @@ nlohmann::json deserialize(const PgType & pgType, PgReader & reader, Cursor & cu
     }
     else
     {
-        nlohmann::json obj(nlohmann::json::value_t::object);
+        json_t obj(json_t::value_t::object);
         reader.readCompositeStart(pgType, cursor);
         // Field count is known from metadata
         for (size_t i = 0; i != pgType.fields_.size(); ++i)
@@ -192,41 +127,11 @@ nlohmann::json deserialize(const PgType & pgType, PgReader & reader, Cursor & cu
 
             // recurse
             reader.readFieldStart(fieldType, cursor);
-            nlohmann::json val = deserialize(fieldType, reader, cursor);
+            json_t val = parsePgToJson(fieldType, reader, cursor);
             obj[name] = std::move(val);
             reader.readFieldEnd(cursor);
         }
         reader.readCompositeEnd(cursor);
         return obj;
     }
-}
-
-nlohmann::json PgFunc::parseResultToJson(const PgFunc & func, const PgResult & result, PgReader & reader, Cursor & cursor)
-{
-    nlohmann::json root;
-    for (size_t idx = 0; idx != func.out_size(); ++idx)
-    {
-        auto & field = func.out_field(idx);
-        const std::string & name = field.name_;
-
-        // Field is null
-        if (result.isNull(0, idx))
-        {
-            root[name] = nlohmann::json(nlohmann::json::value_t::null);
-            continue;
-        }
-        const char * data = result.getValue(0, idx);
-        size_t len = result.getLength(0, idx);
-        if (data == nullptr)
-        {
-            // Should not happen, but in case
-            root[name] = nlohmann::json(nlohmann::json::value_t::null);
-            continue;
-        }
-
-        cursor.reset(data, len);
-        nlohmann::json value = deserialize(*field.type_, reader, cursor);
-        root[name] = value;
-    }
-    return root;
 }

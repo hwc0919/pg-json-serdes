@@ -7,8 +7,8 @@
 
 #include <algorithm>
 #include <cassert>
-#include <pg_json/PgResult.h>
 #include <pg_json/PgField.h>
+#include <pg_json/PgResult.h>
 #include <pg_json/PgType.h>
 #include <sstream>
 #include <stdexcept>
@@ -56,7 +56,7 @@ void pg_json::CatalogueImpl::parseMeta()
     prepareFunctions();
 }
 
-std::vector<std::shared_ptr<pg_json::PgFunc>> pg_json::CatalogueImpl::findFunctions(const std::string & nsp, const std::string & name)
+std::vector<std::shared_ptr<pg_json::PgFunc>> pg_json::CatalogueImpl::findFunctions(const std::string & name, const std::string & nsp)
 {
     auto iters = std::equal_range(funcs_.begin(), funcs_.end(), nsp + "." + name);
 

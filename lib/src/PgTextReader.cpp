@@ -50,7 +50,7 @@ std::string readUntilEqual(Cursor & cursor, const std::string & end)
     return { cursor.peek(), len };
 }
 
-nlohmann::json PgTextReader::readPrimitive(const PgType & type, Cursor & cursor)
+json_t PgTextReader::readPrimitive(const PgType & type, Cursor & cursor)
 {
     if (!cursor.remains())
     {

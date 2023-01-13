@@ -11,8 +11,6 @@ class Cursor
 {
 public:
     virtual ~Cursor() = default;
-    // Reset cursor to a new piece of data
-    virtual void reset(const char * data, size_t len) = 0;
     // current position
     virtual const char * peek() const = 0;
     // current read offset

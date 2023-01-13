@@ -1,8 +1,9 @@
 # pg-json-serdes
 
-Serialize between postgresql encodings and json. Support postgresql primitive types and user-defined composite types.
+Convert between postgresql encodings and json. Support postgresql primitive types and user-defined composite types.
 
 ## Features
+
 - Support postgresql composite types
 - Support postgresql binary encoding and text encoding.
 - Write pg function parameters from json, result can be used directly in `PQexecParams`
@@ -15,6 +16,7 @@ Serialize between postgresql encodings and json. Support postgresql primitive ty
 Load metadata from database, and parse json object into pg function parameters.
 
 Database elements:
+
 ```sql
 create type pj_person_t as (
     name        text,
@@ -25,8 +27,8 @@ create type pj_person_t as (
 );
 
 create or replace function pj_echo_complex(
-inout person pj_person_t,
-inout people pj_person_t[]
+    inout person pj_person_t,
+    inout people pj_person_t[]
 )
 language plpgsql
 as $$
@@ -36,28 +38,30 @@ end $$;
 ```
 
 Cpp code:
+
 ```cpp
+#include <pg_json/Catalogue.h>
+#include <pg_json/Converter.h>
+#include <pg_json/utils/GeneralParamSetter.h>
 using namespace pg_json;
 
 // Load catalogue
-auto catalogue = pg_json::Catalogue::createFromDbConnInfo(getTestDbUri());
-auto func = catalogue->findFunctions("public", "pj_echo_complex")[0];
+auto catalogue = Catalogue::createFromDbConnInfo();
+auto func = catalogue->findFunctions("pj_echo_complex")[0];
 
 // Serialize parameters
 nlohmann::json req{/* ... */};
 GeneralParamSetter setter;
-auto writer = PgWriter::newTextWriter();
-auto buffer = StringBuffer();
-PgFunc::parseJsonToParams(req, *func, setter, *writer, buffer);
+auto converter = Converter::newConverter(PgFormat::kText);
+converter->parseJsonToParams(*func, reqJson, setter);
 
 // Parse result
 auto res = execSql(*func, setter);
-auto reader = PgReader::newTextReader();
-auto cursor = RawCursor();
-auto resJson = PgFunc::parseResultToJson(*func, *res, *reader, cursor);
+auto resJson = converter->parseResultToJson(*func, *res);
 ```
 
 Output:
+
 ```text
 Input json: 
 {

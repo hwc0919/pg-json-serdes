@@ -3,21 +3,19 @@
 //
 #include "common.h"
 #include <iostream>
-#include <nlohmann/json.hpp>
 #include <pg_json/Catalogue.h>
-#include <pg_json/PgFunc.h>
-#include <pg_json/PgReader.h>
-#include <pg_json/PgWriter.h>
+#include <pg_json/Converter.h>
+#include <pg_json/json.h>
 #include <pg_json/utils/GeneralParamSetter.h>
-#include <pg_json/utils/RawCursor.h>
-#include <pg_json/utils/StringBuffer.h>
+
+using namespace pg_json;
 
 int main()
 {
-    auto catalogue = pg_json::Catalogue::createFromDbConnInfo(getTestDbUri());
+    auto catalogue = Catalogue::createFromDbConnInfo(getTestDbUri());
 
-    auto funcs = catalogue->findFunctions("public", "pj_test_primitives");
-    std::cout << "Find " << funcs.size() << " functions by public.pj_test_primitives" << std::endl;
+    auto funcs = catalogue->findFunctions("pj_test_primitives");
+    std::cout << "Find " << funcs.size() << " functions by pj_test_primitives" << std::endl;
     if (funcs.empty())
     {
         return 1;
@@ -29,19 +27,18 @@ int main()
     std::string name = R"(Nitro'"\melon)";
     int age = 27;
     std::string birthday = "1949-10-01 11:11:11";
-    nlohmann::json data{ { "phone", 123456 }, { "email", "nitromelon@foxmail.com" } };
-    nlohmann::json req{
+    json_t data{ { "phone", 123456 }, { "email", "nitromelon@foxmail.com" } };
+    json_t reqJson{
         { "name", name },
         { "age", age },
         { "birthday", birthday },
         { "data", data }
     };
-    pg_json::GeneralParamSetter setter;
-    auto writer = pg_json::PgWriter::newTextWriter();
-    auto buffer = pg_json::StringBuffer();
-    pg_json::PgFunc::parseJsonToParams(req, *func, setter, *writer, buffer);
+    GeneralParamSetter setter;
+    auto converter = Converter::newConverter(PgFormat::kText);
+    converter->parseJsonToParams(*func, reqJson, setter);
 
-    std::cout << "Input json: " << req.dump() << std::endl;
+    std::cout << "Input json: " << reqJson.dump() << std::endl;
     std::cout << "Pg params:" << std::endl;
     printParams(*func, setter);
 
@@ -56,8 +53,6 @@ int main()
     std::cout << "Pg result:" << std::endl;
     printResults(*func, *res);
 
-    auto reader = pg_json::PgReader::newTextReader();
-    auto cursor = pg_json::RawCursor();
-    auto resJson = pg_json::PgFunc::parseResultToJson(*func, *res, *reader, cursor);
+    auto resJson = converter->parseResultToJson(*func, *res);
     std::cout << "Result json: " << resJson.dump() << std::endl;
 }

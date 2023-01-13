@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <cassert>
 #include <memory>
 #include <pg_json/PgParamSetter.h>
 #include <string>
@@ -24,14 +25,14 @@ public:
         paramFormats_.resize(n, 0);
     }
 
-    void setParameter(size_t idx, const char * data, size_t len, int format) override
+    void setParameter(size_t idx, const char * data, size_t len, PgFormat format) override
     {
         assert(idx < paramValues_.size());
         std::shared_ptr<std::string> obj = std::make_shared<std::string>(data, len);
         objs_.push_back(obj);
         paramValues_[idx] = obj->data();
         paramLens_[idx] = static_cast<int>(len);
-        paramFormats_[idx] = format;
+        paramFormats_[idx] = (int)format;
     }
 
     size_t size() const

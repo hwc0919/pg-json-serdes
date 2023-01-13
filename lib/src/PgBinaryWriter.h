@@ -13,8 +13,8 @@ namespace pg_json
 class PgBinaryWriter : public PgWriter
 {
 public:
-    void writePrimitive(const PgType & pgType, const nlohmann::json & jsonParam, Buffer & buf) override;
-    bool needQuote(const PgType & pgType, const nlohmann::json & jsonParam) override;
+    void writePrimitive(const PgType & pgType, const json_t & jsonParam, Buffer & buf) override;
+    bool needQuote(const PgType & pgType, const json_t & jsonParam) override;
     void writeArrayStart(const PgType & elemType, size_t len, Buffer & buf) override;
     void writeArrayEnd(Buffer & buf) override;
     void writeElementStart(Buffer & buf, bool needQuote) override;

@@ -8,10 +8,6 @@ namespace pg_json
 class StringBuffer : public Buffer
 {
 public:
-    void clear() override
-    {
-        buf_.clear();
-    }
     void append(const std::string & str) override
     {
         buf_.append(str);

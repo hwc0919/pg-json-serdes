@@ -11,11 +11,9 @@ namespace pg_json
 class RawCursor : public Cursor
 {
 public:
-    void reset(const char * data, size_t len) override
+    RawCursor(const char * data, size_t len)
+        : data_(data), len_(len), readOffset_(0)
     {
-        data_ = data;
-        len_ = len;
-        readOffset_ = 0;
     }
     const char * peek() const override
     {

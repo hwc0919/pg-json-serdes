@@ -2,9 +2,9 @@
 // Created by wanchen.he on 2023/1/9.
 //
 #pragma once
-#include <nlohmann/json.hpp>
 #include <pg_json/Buffer.h>
 #include <pg_json/PgType.h>
+#include <pg_json/json.h>
 
 namespace pg_json
 {
@@ -18,14 +18,14 @@ public:
 
     virtual ~PgWriter() = default;
 
-    virtual void writePrimitive(const PgType & pgType, const nlohmann::json & jsonParam, Buffer & buf) = 0;
+    virtual void writePrimitive(const PgType & pgType, const json_t & jsonParam, Buffer & buf) = 0;
 
     /**
      * Check whether the next element or field need to quote.
      * @param pgType
      * @param jsonParam
      */
-    virtual bool needQuote(const PgType & pgType, const nlohmann::json & jsonParam) = 0;
+    virtual bool needQuote(const PgType & pgType, const json_t & jsonParam) = 0;
 
     virtual void writeArrayStart(const PgType & elemType, size_t len, Buffer & buf) = 0;
     virtual void writeArrayEnd(Buffer & buf) = 0;

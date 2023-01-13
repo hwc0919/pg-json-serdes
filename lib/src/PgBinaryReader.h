@@ -13,7 +13,7 @@ namespace pg_json
 class PgBinaryReader : public PgReader
 {
 public:
-    nlohmann::json readPrimitive(const PgType & type, Cursor & cursor) override;
+    json_t readPrimitive(const PgType & type, Cursor & cursor) override;
     void readArrayStart(const PgType & elemType, Cursor & cursor) override;
     void readArrayEnd(Cursor & cursor) override;
     bool hasMoreElement(Cursor & cursor) override;

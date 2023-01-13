@@ -2,7 +2,7 @@
 // Created by wanchen.he on 2023/1/11.
 //
 #pragma once
-#include <nlohmann/json.hpp>
+#include <pg_json/json.h>
 #include <pg_json/Cursor.h>
 #include <pg_json/PgType.h>
 
@@ -17,7 +17,7 @@ public:
     static std::shared_ptr<PgReader> newBinaryReader();
 
     virtual ~PgReader() = default;
-    virtual nlohmann::json readPrimitive(const PgType & type, Cursor & cursor) = 0;
+    virtual json_t readPrimitive(const PgType & type, Cursor & cursor) = 0;
 
     virtual void readArrayStart(const PgType & elemType, Cursor & cursor) = 0;
     virtual void readArrayEnd(Cursor & cursor) = 0;

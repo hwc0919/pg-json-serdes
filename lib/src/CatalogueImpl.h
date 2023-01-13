@@ -17,7 +17,12 @@ public:
     explicit CatalogueImpl(std::shared_ptr<PgResult> meta_res);
     void parseMeta();
 
-    std::vector<std::shared_ptr<PgFunc>> findFunctions(const std::string & nsp, const std::string & name) override;
+    std::vector<std::shared_ptr<PgFunc>> findFunctions(const std::string & name) override
+    {
+        static const std::string defaultNamespace("public");
+        return findFunctions(name, defaultNamespace);
+    }
+    std::vector<std::shared_ptr<PgFunc>> findFunctions(const std::string & name, const std::string & nsp) override;
 
 private:
     struct MetaRow

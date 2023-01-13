@@ -2,8 +2,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <libpq-fe.h>
-#include <pg_json/PgResult.h>
 #include <pg_json/PgFunc.h>
+#include <pg_json/PgResult.h>
 #include <pg_json/utils/GeneralParamSetter.h>
 #include <pg_json/utils/PgResultWrapper.h>
 #include <string>
@@ -84,7 +84,9 @@ inline void printResults(const pg_json::PgFunc & func, const pg_json::PgResult &
     }
 }
 
-inline std::shared_ptr<pg_json::PgResultWrapper> execSql(const pg_json::PgFunc & func, const pg_json::GeneralParamSetter & setter, int resultFormat = 0)
+inline std::shared_ptr<pg_json::PgResultWrapper> execSql(const pg_json::PgFunc & func,
+                                                         const pg_json::GeneralParamSetter & setter,
+                                                         pg_json::PgFormat resultFormat = pg_json::PgFormat::kText)
 {
     std::shared_ptr<PGconn> connPtr(PQconnectdb(getTestDbUri().c_str()), [](PGconn * conn) {
         if (conn) {
@@ -103,7 +105,7 @@ inline std::shared_ptr<pg_json::PgResultWrapper> execSql(const pg_json::PgFunc &
         setter.getParamValues().data(),
         setter.getParamLens().data(),
         setter.getParamFormats().data(),
-        resultFormat);
+        (int)resultFormat);
     if (r == nullptr)
     {
         throw std::runtime_error(std::string("sql execute failed. ") + PQerrorMessage(connPtr.get()));

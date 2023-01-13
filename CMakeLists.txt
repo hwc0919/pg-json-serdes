@@ -16,15 +16,18 @@ target_include_directories(${PROJECT_NAME}
 aux_source_directory(${CMAKE_SOURCE_DIR}/lib/src SRC_DIR)
 
 set(public_headers
-        lib/inc/pg_json/PgField.h
-        lib/inc/pg_json/PgType.h
-        lib/inc/pg_json/PgFunc.h
-        lib/inc/pg_json/Catalogue.h
         lib/inc/pg_json/Buffer.h
+        lib/inc/pg_json/Catalogue.h
+        lib/inc/pg_json/Converter.h
         lib/inc/pg_json/Cursor.h
+        lib/inc/pg_json/json.h
+        lib/inc/pg_json/PgField.h
+        lib/inc/pg_json/PgFormat.h
+        lib/inc/pg_json/PgFunc.h
         lib/inc/pg_json/PgParamSetter.h
-        lib/inc/pg_json/PgResult.h
         lib/inc/pg_json/PgReader.h
+        lib/inc/pg_json/PgResult.h
+        lib/inc/pg_json/PgType.h
         lib/inc/pg_json/PgWriter.h
         lib/inc/pg_json/utils/GeneralParamSetter.h
         lib/inc/pg_json/utils/PgResultWrapper.h
@@ -32,26 +35,30 @@ set(public_headers
         lib/inc/pg_json/utils/StringBuffer.h)
 
 set(private_headers
-        lib/src/MetaSql.h
-        lib/src/Scope.h
-        lib/src/PgFuncImpl.h
+        lib/src/ByteOrder.h
         lib/src/CatalogueImpl.h
+        lib/src/ConverterImpl.h
+        lib/src/MetaSql.h
+        lib/src/PgBinaryReader.h
+        lib/src/PgBinaryWriter.h
+        lib/src/PgFuncImpl.h
+        lib/src/ConverterImpl.h
         lib/src/PgTextReader.h
         lib/src/PgTextWriter.h
-        lib/src/PgBinaryReader.h
-        lib/src/PgBinaryWriter.h)
+        lib/src/Scope.h)
 
 set(PJ_SRC
         lib/src/Catalogue.cpp
         lib/src/CatalogueImpl.cpp
-        lib/src/PgFunc.cpp
+        lib/src/Converter.cpp
+        lib/src/ConverterImpl.cpp
+        lib/src/PgBinaryReader.cpp
+        lib/src/PgBinaryWriter.cpp
         lib/src/PgFuncImpl.cpp
         lib/src/PgReader.cpp
-        lib/src/PgWriter.cpp
         lib/src/PgTextReader.cpp
         lib/src/PgTextWriter.cpp
-        lib/src/PgBinaryReader.cpp
-        lib/src/PgBinaryWriter.cpp)
+        lib/src/PgWriter.cpp)
 
 target_sources(${PROJECT_NAME} PRIVATE
         ${public_headers}

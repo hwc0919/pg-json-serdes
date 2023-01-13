@@ -8,7 +8,7 @@ using namespace pg_json;
 
 static int64_t readIntBE(Cursor & cursor, size_t size);
 
-nlohmann::json PgBinaryReader::readPrimitive(const PgType & type, Cursor & cursor)
+json_t PgBinaryReader::readPrimitive(const PgType & type, Cursor & cursor)
 {
     size_t len;
     if (scopeStack_.empty())

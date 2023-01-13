@@ -5,7 +5,7 @@
 
 using namespace pg_json;
 
-void PgTextWriter::writePrimitive(const PgType & pgType, const nlohmann::json & jsonParam, Buffer & buf)
+void PgTextWriter::writePrimitive(const PgType & pgType, const json_t & jsonParam, Buffer & buf)
 {
     switch (pgType.oid_)
     {
@@ -139,7 +139,7 @@ static bool hasSpecialChar(const std::string & str)
     });
 }
 
-bool PgTextWriter::needQuote(const PgType & pgType, const nlohmann::json & jsonParam)
+bool PgTextWriter::needQuote(const PgType & pgType, const json_t & jsonParam)
 {
     if (scopeStack_.empty())
     {

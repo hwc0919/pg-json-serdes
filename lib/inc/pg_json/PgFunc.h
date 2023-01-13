@@ -1,24 +1,17 @@
 #pragma once
-#include <nlohmann/json.hpp>
-#include <pg_json/Cursor.h>
-#include <pg_json/Buffer.h>
-#include <pg_json/PgParamSetter.h>
-#include <pg_json/PgReader.h>
-#include <pg_json/PgWriter.h>
-#include <pg_json/PgResult.h>
+
+#include <cstddef>
+#include <pg_json/PgField.h>
+#include <string>
 
 namespace pg_json
 {
-
 class PgFunc
 {
 public:
     using Oid = unsigned int;
+
     virtual ~PgFunc() = default;
-
-    static void parseJsonToParams(const nlohmann::json & obj, const PgFunc & func, PgParamSetter & setter, PgWriter & writer, Buffer & buffer, int format = 0);
-    static nlohmann::json parseResultToJson(const PgFunc & func, const PgResult & result, PgReader & reader, Cursor & cursor);
-
     virtual const std::string & namespace_() const = 0;
     virtual const std::string & name() const = 0;
     virtual const std::string & statement() const = 0;
@@ -32,5 +25,4 @@ public:
     virtual const std::string & in_type_name(size_t i) const = 0;
     virtual const std::string & out_type_name(size_t i) const = 0;
 };
-
 } // namespace pg_json

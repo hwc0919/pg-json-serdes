@@ -35,7 +35,7 @@ static void writeIntBE(Buffer & buf, unsigned long long number, size_t size)
     }
 }
 
-void PgBinaryWriter::writePrimitive(const PgType & pgType, const nlohmann::json & jsonParam, Buffer & buf)
+void PgBinaryWriter::writePrimitive(const PgType & pgType, const json_t & jsonParam, Buffer & buf)
 {
     switch (pgType.oid_)
     {
@@ -163,7 +163,7 @@ void PgBinaryWriter::writePrimitive(const PgType & pgType, const nlohmann::json 
     }
 }
 
-bool PgBinaryWriter::needQuote(const PgType & pgType, const nlohmann::json & jsonParam)
+bool PgBinaryWriter::needQuote(const PgType & pgType, const json_t & jsonParam)
 {
     return false;
 }
