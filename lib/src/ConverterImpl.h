@@ -34,7 +34,10 @@ public:
     {
         cursorFactory_ = std::move(factory);
     }
-
+    void setNullHandler(NullHandler handler) override
+    {
+        nullHandler_ = std::move(handler);
+    }
     void parseJsonToParams(const PgFunc & func, const json_t & obj, PgParamSetter & setter) const override;
     json_t parseResultToJson(const PgFunc & func, const PgResult & result) const override;
 
@@ -42,5 +45,6 @@ protected:
     PgFormat format_{ PgFormat::kText };
     BufferFactory bufferFactory_;
     CursorFactory cursorFactory_;
+    NullHandler nullHandler_;
 };
 } // namespace pg_json

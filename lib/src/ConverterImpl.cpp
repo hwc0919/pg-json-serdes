@@ -8,15 +8,21 @@
 
 using namespace pg_json;
 
-static auto defaultBufferFactory = []() {
+static std::shared_ptr<Buffer> defaultBufferFactory()
+{
     return std::make_shared<StringBuffer>();
 };
-static auto defaultCursorFactory = [](const char * data, size_t len) {
+static std::shared_ptr<Cursor> defaultCursorFactory(const char * data, size_t len)
+{
     return std::make_shared<RawCursor>(data, len);
 };
+static json_t defaultNullHandler(const PgType & pgType, bool explicitNull)
+{
+    return json_t(nullptr);
+}
 
 ConverterImpl::ConverterImpl(PgFormat format)
-    : format_(format), bufferFactory_(defaultBufferFactory), cursorFactory_(defaultCursorFactory)
+    : format_(format), bufferFactory_(defaultBufferFactory), cursorFactory_(defaultCursorFactory), nullHandler_(defaultNullHandler)
 {
 }
 
@@ -30,12 +36,23 @@ void ConverterImpl::parseJsonToParams(const PgFunc & func, const json_t & obj, P
         auto & field = func.in_field(idx);
         const std::string & name = field.name_;
 
+        json_t tmp;
+        auto & jsonParam = tmp;
         // Ignore non-exist field
         if (!obj.contains(name))
         {
-            continue;
+            tmp = nullHandler_(*field.type_, false);
         }
-        auto & jsonParam = obj[name];
+        else
+        {
+            jsonParam = obj[name];
+            if (jsonParam.is_null())
+            {
+                tmp = nullHandler_(*field.type_, true);
+                jsonParam = tmp;
+            }
+        }
+
         // No need to set null
         if (jsonParam.is_null())
         {

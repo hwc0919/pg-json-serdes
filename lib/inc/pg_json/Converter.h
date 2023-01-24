@@ -17,6 +17,7 @@ class Converter
 public:
     using BufferFactory = std::function<std::shared_ptr<Buffer>()>;
     using CursorFactory = std::function<std::shared_ptr<Cursor>(const char *, size_t)>;
+    using NullHandler = std::function<json_t(const PgType & pgType, bool explicitNull)>;
 
     static std::shared_ptr<Converter> newConverter(PgFormat format);
     static void parseJsonToPg(const PgType & pgType, const json_t & param, PgWriter & writer, Buffer & buffer);
@@ -27,6 +28,7 @@ public:
     virtual void setFormat(PgFormat format) = 0;
     virtual void setBufferFactory(BufferFactory factory) = 0;
     virtual void setCursorFactory(CursorFactory factory) = 0;
+    virtual void setNullHandler(NullHandler handler) = 0;
 
     virtual void parseJsonToParams(const PgFunc & func, const json_t & obj, PgParamSetter & setter) const = 0;
     virtual json_t parseResultToJson(const PgFunc & func, const PgResult & result) const = 0;
