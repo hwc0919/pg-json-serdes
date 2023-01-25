@@ -27,7 +27,7 @@ public:
 
 protected:
     std::string readWholeField(Cursor & cursor) const;
-    std::string readUnescapedString(Cursor & cursor) const;
+    std::string readEscapedString(Cursor & cursor) const;
 
     std::vector<ScopeMark> scopeStack_;
 };

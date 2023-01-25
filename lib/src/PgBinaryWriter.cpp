@@ -163,11 +163,6 @@ void PgBinaryWriter::writePrimitive(const PgType & pgType, const json_t & jsonPa
     }
 }
 
-bool PgBinaryWriter::needQuote(const PgType & pgType, const json_t & jsonParam)
-{
-    return false;
-}
-
 void PgBinaryWriter::writeArrayStart(const PgType & elemType, size_t len, Buffer & buf)
 {
     writeIntBE(buf, 1, sizeof(unsigned int));
@@ -184,18 +179,13 @@ void PgBinaryWriter::writeArrayEnd(Buffer & buf)
     scopeStack_.pop_back();
 }
 
-void PgBinaryWriter::writeElementStart(Buffer & buf, bool)
+void PgBinaryWriter::writeElementStart(const PgType &, Buffer & buf)
 {
     assert(!scopeStack_.empty() && scopeStack_.back().type == ScopeType::Array);
     ScopeMark scope(ScopeType::ArrayElement);
     scope.offset = buf.size();              // field start offset
     buf.append(sizeof(unsigned int), '\0'); // Reserve 4 bytes for field length
     scopeStack_.push_back(std::move(scope));
-}
-
-void PgBinaryWriter::writeElementSeperator(Buffer & buf)
-{
-    // no separator needed in binary format
 }
 
 void PgBinaryWriter::writeElementEnd(Buffer & buf)
@@ -209,8 +199,12 @@ void PgBinaryWriter::writeElementEnd(Buffer & buf)
     assert(buf.size() >= scope.offset + sizeof(unsigned));
     char * data = buf.data() + scope.offset;
     size_t len = buf.size() - scope.offset - sizeof(unsigned);
-    printf("Write element end, len = %zu\n", len);
     *reinterpret_cast<unsigned *>(data) = ByteOrder::hton(static_cast<unsigned>(len));
+}
+
+void PgBinaryWriter::writeElementSeperator(Buffer & buf)
+{
+    // no separator needed in binary format
 }
 
 void PgBinaryWriter::writeCompositeStart(const PgType & type, Buffer & buf)
@@ -226,7 +220,7 @@ void PgBinaryWriter::writeCompositeEnd(Buffer & buf)
     scopeStack_.pop_back();
 }
 
-void PgBinaryWriter::writeFieldStart(const PgType & fieldType, Buffer & buf, bool)
+void PgBinaryWriter::writeFieldStart(const PgType & fieldType, Buffer & buf)
 {
     assert(!scopeStack_.empty() && scopeStack_.back().type == ScopeType::Composite);
     writeIntBE(buf, fieldType.oid_, sizeof(unsigned int)); // write field oid
@@ -234,11 +228,6 @@ void PgBinaryWriter::writeFieldStart(const PgType & fieldType, Buffer & buf, boo
     scope.offset = buf.size();
     buf.append(sizeof(unsigned int), '\0'); // Reserve 4 bytes for field length
     scopeStack_.push_back(std::move(scope));
-}
-
-void PgBinaryWriter::writeFieldSeparator(Buffer & buf)
-{
-    // no separator
 }
 
 void PgBinaryWriter::writeFieldEnd(Buffer & buf)
@@ -253,6 +242,11 @@ void PgBinaryWriter::writeFieldEnd(Buffer & buf)
     char * data = buf.data() + scope.offset;
     size_t len = buf.size() - scope.offset - sizeof(unsigned);
     *reinterpret_cast<unsigned *>(data) = ByteOrder::hton(static_cast<unsigned>(len));
+}
+
+void PgBinaryWriter::writeFieldSeparator(Buffer & buf)
+{
+    // no separator
 }
 
 void PgBinaryWriter::writeNullField(const PgType & fieldType, Buffer & buf)

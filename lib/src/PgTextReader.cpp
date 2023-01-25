@@ -64,7 +64,7 @@ json_t PgTextReader::readPrimitive(const PgType & type, Cursor & cursor)
         case PG_VARCHAR:
         case PG_JSON:
         case PG_JSONB: {
-            return readUnescapedString(cursor);
+            return readEscapedString(cursor);
         }
     }
 
@@ -153,7 +153,7 @@ void PgTextReader::readElementStart(Cursor & cursor)
     if (cursor.remains() >= upperScope.quote.size() && 0 == strncmp(cursor.peek(), upperScope.quote.c_str(), upperScope.quote.size()))
     {
         cursor.advance(upperScope.quote.size());
-        scope.quoted = true;
+        scope.quoted = 1;
     }
     scopeStack_.push_back(std::move(scope));
 }
@@ -172,7 +172,7 @@ void PgTextReader::readElementEnd(Cursor & cursor)
     ScopeMark scope = std::move(scopeStack_.back());
     scopeStack_.pop_back();
     assert(!scopeStack_.empty() && scopeStack_.back().type == ScopeType::Array);
-    if (scope.quoted)
+    if (scope.quoted == 1)
     {
         CHECK_AND_ADVANCE_LEN(cursor, scope.quote.size());
     }
@@ -229,7 +229,7 @@ void PgTextReader::readFieldStart(const PgType & fieldType, Cursor & cursor)
         && 0 == strncmp(cursor.peek(), upperScope.quote.c_str(), upperScope.quote.size()))
     {
         cursor.advance(upperScope.quote.size());
-        scope.quoted = true;
+        scope.quoted = 1;
     }
     scopeStack_.push_back(std::move(scope));
 }
@@ -249,7 +249,7 @@ void PgTextReader::readFieldEnd(Cursor & cursor)
     scopeStack_.pop_back();
     assert(!scopeStack_.empty() && scopeStack_.back().type == ScopeType::Composite);
 
-    if (scope.quoted)
+    if (scope.quoted == 1)
     {
         CHECK_AND_ADVANCE_LEN(cursor, scope.quote.size());
     }
@@ -290,17 +290,19 @@ std::string PgTextReader::readWholeField(Cursor & cursor) const
     return str;
 }
 
-std::string PgTextReader::readUnescapedString(Cursor & cursor) const
+std::string PgTextReader::readEscapedString(Cursor & cursor) const
 {
     assert(cursor.remains());
     if (scopeStack_.empty())
     {
+        // Top level, no quote no escape.
         return readWholeField(cursor);
     }
     const ScopeMark & upperScope = scopeStack_.back();
     assert(upperScope.type == ScopeType::ArrayElement || upperScope.type == ScopeType::CompositeField);
     if (!upperScope.quoted)
     {
+        // No quote no escape.
         return readWholeField(cursor);
     }
 

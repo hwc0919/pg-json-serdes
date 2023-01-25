@@ -131,49 +131,6 @@ void PgTextWriter::writePrimitive(const PgType & pgType, const json_t & jsonPara
     }
 }
 
-static bool hasSpecialChar(const std::string & str)
-{
-    static const std::string specialChars = R"( '"\{},)";
-    return std::any_of(str.begin(), str.end(), [](char c) {
-        return specialChars.find(c) != std::string::npos;
-    });
-}
-
-bool PgTextWriter::needQuote(const PgType & pgType, const json_t & jsonParam)
-{
-    if (scopeStack_.empty())
-    {
-        // No need to quote upper-most fields
-        return false;
-    }
-    if (!pgType.isPrimitive())
-    {
-        // Always quote non-upper-most array and composite types
-        return true;
-    }
-    const ScopeMark & upperScope = scopeStack_.back();
-    assert(upperScope.type == ScopeType::Array || upperScope.type == ScopeType::Composite);
-
-    if (pgType.isNumber() || jsonParam.is_number())
-    {
-        // No need to quote number as long as user input is correct.
-        return false;
-    }
-    // Check string quote
-    if (pgType.isString() && jsonParam.is_string())
-    {
-        const std::string & str = jsonParam.get<std::string>();
-        if (hasSpecialChar(str))
-        {
-            return true;
-        }
-        return false;
-    }
-
-    // Quote any other types, just in case.
-    return true;
-}
-
 void PgTextWriter::writeArrayStart(const PgType & elemType, size_t len, Buffer & buf)
 {
     ScopeMark scope(ScopeType::Array);
@@ -211,7 +168,7 @@ void PgTextWriter::writeArrayEnd(Buffer & buf)
     buf.append(1, '}');
 }
 
-void PgTextWriter::writeElementStart(Buffer & buf, bool needQuote)
+void PgTextWriter::writeElementStart(const PgType & elemType, Buffer & buf)
 {
     if (scopeStack_.empty() || scopeStack_.back().type != ScopeType::Array)
     {
@@ -220,10 +177,10 @@ void PgTextWriter::writeElementStart(Buffer & buf, bool needQuote)
     const ScopeMark & upperScope = scopeStack_.back();
 
     ScopeMark scope(ScopeType::ArrayElement);
-    scope.quoted = needQuote;
     scope.quote = upperScope.quote;
-    if (scope.quoted)
+    if (needQuote(elemType))
     {
+        scope.quoted = 1;
         buf.append(scope.quote.c_str(), scope.quote.size());
     }
     scopeStack_.push_back(std::move(scope));
@@ -244,7 +201,7 @@ void PgTextWriter::writeElementEnd(Buffer & buf)
     scopeStack_.pop_back();
     assert(!scopeStack_.empty() && scopeStack_.back().type == ScopeType::Array);
 
-    if (scope.quoted)
+    if (scope.quoted == 1)
     {
         buf.append(scope.quote.c_str(), scope.quote.size());
     }
@@ -288,7 +245,7 @@ void PgTextWriter::writeCompositeEnd(Buffer & buf)
     buf.append(1, ')');
 }
 
-void PgTextWriter::writeFieldStart(const PgType & fieldType, Buffer & buf, bool needQuote)
+void PgTextWriter::writeFieldStart(const PgType & fieldType, Buffer & buf)
 {
     if (scopeStack_.empty() || scopeStack_.back().type != ScopeType::Composite)
     {
@@ -297,11 +254,10 @@ void PgTextWriter::writeFieldStart(const PgType & fieldType, Buffer & buf, bool 
     const ScopeMark & upperScope = scopeStack_.back();
 
     ScopeMark scope(ScopeType::CompositeField);
-    scope.quoted = needQuote;
     scope.quote = upperScope.quote;
-
-    if (scope.quoted)
+    if (needQuote(fieldType))
     {
+        scope.quoted = 1;
         buf.append(scope.quote.c_str(), scope.quote.size());
     }
     scopeStack_.push_back(std::move(scope));
@@ -322,7 +278,7 @@ void PgTextWriter::writeFieldEnd(Buffer & buf)
     scopeStack_.pop_back();
     assert(!scopeStack_.empty() && scopeStack_.back().type == ScopeType::Composite);
 
-    if (scope.quoted)
+    if (scope.quoted == 1)
     {
         buf.append(scope.quote.c_str(), scope.quote.size());
     }
@@ -333,14 +289,26 @@ void PgTextWriter::writeNullField(const PgType & fieldType, Buffer & buf)
     // nothing to write
 }
 
+static bool hasSpecialChar(const std::string & str)
+{
+    static const std::string specialChars = R"( '"\{},)";
+    return std::any_of(str.begin(), str.end(), [](char c) {
+        return specialChars.find(c) != std::string::npos;
+    });
+}
+
 void PgTextWriter::writeUnescapedString(const std::string & str, Buffer & buf)
 {
-    if (scopeStack_.empty())
+    if (scopeStack_.empty() || !hasSpecialChar(str))
     {
         buf.append(str);
         return;
     }
-    const ScopeMark & upperScope = scopeStack_.back();
+
+    ScopeMark & upperScope = scopeStack_.back();
+    // Write quote
+    assert(upperScope.quoted == 0);
+    buf.append(upperScope.quote);
     for (char c : str)
     {
         switch (c) {
@@ -371,4 +339,20 @@ void PgTextWriter::writeUnescapedString(const std::string & str, Buffer & buf)
             }
         }
     }
+    buf.append(upperScope.quote);
+    upperScope.quoted = 2;
+}
+
+bool PgTextWriter::needQuote(const PgType & pgType)
+{
+    if (scopeStack_.empty() || pgType.isNumber() || pgType.isString())
+    {
+        // 1. No need to quote up-most fields
+        // 2. No need to quote number as long as user input is correct.
+        // 3. We don't know whether the parameter str needs quotes,
+        // so we simply return false here, and let writeUnescapedString() handle the quotes.
+        return false;
+    }
+    // Quote any other types
+    return true;
 }

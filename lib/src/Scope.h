@@ -20,7 +20,7 @@ struct ScopeMark
     explicit ScopeMark(ScopeType typ)
         : type(typ){};
     ScopeType type{ ScopeType::None };
-    bool quoted{ false };
+    unsigned short quoted{ 0 };
     std::string quote;
     size_t offset{ 0 }; // for binary
     size_t len{ 0 };    // for binary array

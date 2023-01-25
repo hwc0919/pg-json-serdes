@@ -31,8 +31,7 @@ void Converter::parseJsonToPg(const PgType & pgType, const json_t & param, PgWri
             {
                 throw std::runtime_error("Null array element is not supported yet.");
             }
-            bool needQuote = writer.needQuote(elemType, jsonElem);
-            writer.writeElementStart(buffer, needQuote);
+            writer.writeElementStart(elemType, buffer);
             // recurse
             parseJsonToPg(elemType, jsonElem, writer, buffer);
             writer.writeElementEnd(buffer);
@@ -70,8 +69,7 @@ void Converter::parseJsonToPg(const PgType & pgType, const json_t & param, PgWri
                 writer.writeNullField(*field.type_, buffer);
                 continue;
             }
-            bool needQuote = writer.needQuote(fieldType, fieldParam);
-            writer.writeFieldStart(fieldType, buffer, needQuote);
+            writer.writeFieldStart(fieldType, buffer);
             // recurse
             parseJsonToPg(fieldType, fieldParam, writer, buffer);
             writer.writeFieldEnd(buffer);
