@@ -19,19 +19,40 @@ public:
     using CursorFactory = std::function<std::shared_ptr<Cursor>(const char *, size_t)>;
     using NullHandler = std::function<json_t(const PgType & pgType, bool explicitNull)>;
 
-    static std::shared_ptr<Converter> newConverter(PgFormat format);
-    static void parseJsonToPg(const PgType & pgType, const json_t & param, PgWriter & writer, Buffer & buffer);
-    static json_t parsePgToJson(const PgType & pgType, PgReader & reader, Cursor & cursor);
+    explicit Converter(PgFormat format = PgFormat::kText);
+    ~Converter() = default;
 
-    virtual ~Converter() = default;
-    virtual PgFormat format() const = 0;
-    virtual void setFormat(PgFormat format) = 0;
-    virtual void setBufferFactory(BufferFactory factory) = 0;
-    virtual void setCursorFactory(CursorFactory factory) = 0;
-    virtual void setNullHandler(NullHandler handler) = 0;
+    PgFormat format() const
+    {
+        return format_;
+    }
+    void setFormat(PgFormat format)
+    {
+        format_ = format;
+    }
+    void setBufferFactory(BufferFactory factory)
+    {
+        bufferFactory_ = std::move(factory);
+    }
+    void setCursorFactory(CursorFactory factory)
+    {
+        cursorFactory_ = std::move(factory);
+    }
+    void setNullHandler(NullHandler handler)
+    {
+        nullHandler_ = std::move(handler);
+    }
+    void parseJsonToParams(const PgFunc & func, const json_t & obj, PgParamSetter & setter) const;
+    json_t parseResultToJson(const PgFunc & func, const PgResult & result) const;
 
-    virtual void parseJsonToParams(const PgFunc & func, const json_t & obj, PgParamSetter & setter) const = 0;
-    virtual json_t parseResultToJson(const PgFunc & func, const PgResult & result) const = 0;
+    void parseJsonToPg(const PgType & pgType, const json_t & param, PgWriter & writer, Buffer & buffer) const;
+    json_t parsePgToJson(const PgType & pgType, PgReader & reader, Cursor & cursor) const;
+
+protected:
+    PgFormat format_{ PgFormat::kText };
+    BufferFactory bufferFactory_;
+    CursorFactory cursorFactory_;
+    NullHandler nullHandler_;
 };
 
 } // namespace pg_json

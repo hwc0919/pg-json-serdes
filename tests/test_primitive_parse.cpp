@@ -35,8 +35,9 @@ int main()
         { "data", data }
     };
     GeneralParamSetter setter;
-    auto converter = Converter::newConverter(PgFormat::kText);
-    converter->parseJsonToParams(*func, reqJson, setter);
+    Converter converter(PgFormat::kText);
+    (PgFormat::kText);
+    converter.parseJsonToParams(*func, reqJson, setter);
 
     std::cout << "Input json: " << reqJson.dump() << std::endl;
     std::cout << "Pg params:" << std::endl;
@@ -53,6 +54,6 @@ int main()
     std::cout << "Pg result:" << std::endl;
     printResults(*func, *res);
 
-    auto resJson = converter->parseResultToJson(*func, *res);
+    auto resJson = converter.parseResultToJson(*func, *res);
     std::cout << "Result json: " << resJson.dump() << std::endl;
 }

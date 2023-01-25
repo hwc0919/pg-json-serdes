@@ -1,13 +1,102 @@
-#include "ConverterImpl.h"
 #include <pg_json/Converter.h>
+#include <pg_json/utils/RawCursor.h>
+#include <pg_json/utils/StringBuffer.h>
+
 using namespace pg_json;
 
-std::shared_ptr<Converter> Converter::newConverter(PgFormat format)
+static std::shared_ptr<Buffer> defaultBufferFactory()
 {
-    return std::make_shared<ConverterImpl>(format);
+    return std::make_shared<StringBuffer>();
+};
+static std::shared_ptr<Cursor> defaultCursorFactory(const char * data, size_t len)
+{
+    return std::make_shared<RawCursor>(data, len);
+};
+static json_t defaultNullHandler(const PgType & pgType, bool explicitNull)
+{
+    return json_t(nullptr);
 }
 
-void Converter::parseJsonToPg(const PgType & pgType, const json_t & param, PgWriter & writer, Buffer & buffer)
+Converter::Converter(PgFormat format)
+    : format_(format)
+    , bufferFactory_(defaultBufferFactory)
+    , cursorFactory_(defaultCursorFactory)
+    , nullHandler_(defaultNullHandler)
+{
+}
+
+void Converter::parseJsonToParams(const PgFunc & func, const json_t & obj, PgParamSetter & setter) const
+{
+    auto writer = format_ == PgFormat::kText ? PgWriter::newTextWriter()
+                                             : PgWriter::newBinaryWriter();
+    setter.setSize(func.in_size());
+    for (size_t idx = 0; idx != func.in_size(); ++idx)
+    {
+        auto & field = func.in_field(idx);
+        const std::string & name = field.name_;
+
+        json_t tmp;
+        const json_t * tmpPtr;
+        if (!obj.contains(name))
+        {
+            tmp = nullHandler_(*field.type_, false);
+            tmpPtr = &tmp;
+        }
+        else if (obj[name].is_null())
+        {
+            tmp = nullHandler_(*field.type_, true);
+            tmpPtr = &tmp;
+        }
+        else
+        {
+            tmpPtr = &(obj[name]);
+        }
+
+        const json_t & jsonParam = *tmpPtr;
+        // No need to set null
+        if (jsonParam.is_null())
+        {
+            continue;
+        }
+        auto buffer = bufferFactory_();
+        parseJsonToPg(*field.type_, jsonParam, *writer, *buffer);
+        setter.setParameter(idx, buffer->data(), buffer->size(), format_);
+    }
+}
+
+json_t Converter::parseResultToJson(const PgFunc & func, const PgResult & result) const
+{
+    json_t root;
+    auto reader = format_ == PgFormat::kText ? PgReader::newTextReader()
+                                             : PgReader::newBinaryReader();
+    for (size_t idx = 0; idx != func.out_size(); ++idx)
+    {
+        auto & field = func.out_field(idx);
+        const std::string & name = field.name_;
+
+        // Field is null
+        if (result.isNull(0, idx))
+        {
+            root[name] = json_t(json_t::value_t::null);
+            continue;
+        }
+        const char * data = result.getValue(0, idx);
+        size_t len = result.getLength(0, idx);
+        if (data == nullptr)
+        {
+            // Should not happen, but in case
+            root[name] = json_t(json_t::value_t::null);
+            continue;
+        }
+
+        auto cursor = cursorFactory_(data, len);
+        json_t value = parsePgToJson(*field.type_, *reader, *cursor);
+        root[name] = value;
+    }
+    return root;
+}
+
+void Converter::parseJsonToPg(const PgType & pgType, const json_t & param, PgWriter & writer, Buffer & buffer) const
 {
     if (pgType.isPrimitive())
     {
@@ -26,7 +115,14 @@ void Converter::parseJsonToPg(const PgType & pgType, const json_t & param, PgWri
             {
                 writer.writeElementSeperator(buffer);
             }
-            const json_t & jsonElem = param.is_array() ? param[i] : param;
+            json_t tmp;
+            const json_t * tmpPtr = param.is_array() ? &param[i] : &param;
+            if (tmpPtr->is_null())
+            {
+                tmp = nullHandler_(elemType, true);
+                tmpPtr = &tmp;
+            }
+            const json_t & jsonElem = *tmpPtr;
             if (jsonElem.is_null())
             {
                 throw std::runtime_error("Null array element is not supported yet.");
@@ -56,14 +152,25 @@ void Converter::parseJsonToPg(const PgType & pgType, const json_t & param, PgWri
             const PgType & fieldType = *field.type_;
             const std::string & name = field.name_;
             // Field not found, leave it emtpy
-            // TODO: set default handler?
+
+            json_t tmp;
+            const json_t * tmpPtr;
             if (!param.contains(name))
             {
-                writer.writeNullField(*field.type_, buffer);
-                continue;
+                tmp = nullHandler_(*field.type_, false);
+                tmpPtr = &tmp;
             }
-            auto & fieldParam = param[name];
-            // explicit null value
+            else if (param[name].is_null())
+            {
+                tmp = nullHandler_(*field.type_, true);
+                tmpPtr = &tmp;
+            }
+            else
+            {
+                tmpPtr = &(param[name]);
+            }
+
+            auto & fieldParam = *tmpPtr;
             if (fieldParam.is_null())
             {
                 writer.writeNullField(*field.type_, buffer);
@@ -78,7 +185,7 @@ void Converter::parseJsonToPg(const PgType & pgType, const json_t & param, PgWri
     }
 }
 
-json_t Converter::parsePgToJson(const PgType & pgType, PgReader & reader, Cursor & cursor)
+json_t Converter::parsePgToJson(const PgType & pgType, PgReader & reader, Cursor & cursor) const
 {
     if (pgType.isPrimitive())
     {

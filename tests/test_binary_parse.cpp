@@ -43,8 +43,8 @@ int main()
     std::cout << "Input json: " << reqJson.dump() << std::endl;
 
     pg_json::GeneralParamSetter setter;
-    auto converter = Converter::newConverter(PgFormat::kBinary);
-    converter->parseJsonToParams(*func, reqJson, setter);
+    Converter converter(PgFormat::kBinary);
+    converter.parseJsonToParams(*func, reqJson, setter);
     std::cout << "Pg params:" << std::endl;
     printParams(*func, setter);
 
@@ -53,6 +53,6 @@ int main()
     std::cout << "Pg result:" << std::endl;
     printResults(*func, *res);
 
-    auto resJson = converter->parseResultToJson(*func, *res);
+    auto resJson = converter.parseResultToJson(*func, *res);
     std::cout << "Result json: " << resJson.dump() << std::endl;
 }

@@ -37,12 +37,10 @@ set(public_headers
 set(private_headers
         lib/src/ByteOrder.h
         lib/src/CatalogueImpl.h
-        lib/src/ConverterImpl.h
         lib/src/MetaSql.h
         lib/src/PgBinaryReader.h
         lib/src/PgBinaryWriter.h
         lib/src/PgFuncImpl.h
-        lib/src/ConverterImpl.h
         lib/src/PgTextReader.h
         lib/src/PgTextWriter.h
         lib/src/Scope.h)
@@ -51,7 +49,6 @@ set(PJ_SRC
         lib/src/Catalogue.cpp
         lib/src/CatalogueImpl.cpp
         lib/src/Converter.cpp
-        lib/src/ConverterImpl.cpp
         lib/src/PgBinaryReader.cpp
         lib/src/PgBinaryWriter.cpp
         lib/src/PgFuncImpl.cpp
