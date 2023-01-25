@@ -11,6 +11,24 @@
 
 using namespace pg_json;
 
+json_t defaultValueNullHandler(const PgType & pgType, bool /*explicitNull*/)
+{
+    std::cout << "defaultValueNullHandler pgType: " << pgType.name_ << ", cat: " << pgType.category_ << std::endl;
+    if (pgType.isComposite())
+    {
+        return json_t::object();
+    }
+    if (pgType.isArray())
+    {
+        return json_t ::array();
+    }
+    if (pgType.isNumber())
+    {
+        return 0;
+    }
+    return std::string("");
+}
+
 int main()
 {
     auto catalogue = Catalogue::createFromDbConnInfo(getTestDbUri());
@@ -44,6 +62,7 @@ int main()
 
     GeneralParamSetter setter;
     Converter converter(PgFormat::kText);
+    converter.setNullHandler(defaultValueNullHandler);
     converter.parseJsonToParams(*func, reqJson, setter);
     std::cout << "Pg params:" << std::endl;
     printParams(*func, setter);

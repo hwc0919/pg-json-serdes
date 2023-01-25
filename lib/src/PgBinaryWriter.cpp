@@ -74,28 +74,20 @@ void PgBinaryWriter::writePrimitive(const PgType & pgType, const json_t & jsonPa
             writeIntBE(buf, number, pgType.size_);
             break;
         }
-        case PG_FLOAT4: {
-            float number;
-            if (jsonParam.is_number())
-            {
-                number = jsonParam.get<float>();
-            }
-            else if (jsonParam.is_string())
-            {
-                number = std::stof(jsonParam.get<std::string>());
-            }
-            else
-            {
-                throw std::runtime_error("Invalid json for float");
-            }
-            writeIntBE(buf, *reinterpret_cast<unsigned int *>(&number), 4);
-            break;
-        }
+        case PG_FLOAT4:
         case PG_FLOAT8: {
             double number;
-            if (jsonParam.is_number())
+            if (jsonParam.is_number_float())
             {
                 number = jsonParam.get<double>();
+            }
+            else if (jsonParam.is_number_unsigned())
+            {
+                number = (double)jsonParam.get<uint64_t>();
+            }
+            else if (jsonParam.is_number_integer())
+            {
+                number = (double)jsonParam.get<int64_t>();
             }
             else if (jsonParam.is_string())
             {
@@ -103,9 +95,17 @@ void PgBinaryWriter::writePrimitive(const PgType & pgType, const json_t & jsonPa
             }
             else
             {
-                throw std::runtime_error("Invalid json for double");
+                throw std::runtime_error("Invalid json for float");
             }
-            writeIntBE(buf, *reinterpret_cast<unsigned long long *>(&number), 8);
+            if (pgType.oid_ == PG_FLOAT4)
+            {
+                float fNumber = (float)number;
+                writeIntBE(buf, *reinterpret_cast<unsigned int *>(&fNumber), 4);
+            }
+            else
+            {
+                writeIntBE(buf, *reinterpret_cast<unsigned long long *>(&number), 8);
+            }
             break;
         }
         case PG_TEXT:

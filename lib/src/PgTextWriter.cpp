@@ -44,20 +44,28 @@ void PgTextWriter::writePrimitive(const PgType & pgType, const json_t & jsonPara
         }
         case PG_FLOAT4:
         case PG_FLOAT8: {
-            if (jsonParam.is_number())
+            std::string str;
+            if (jsonParam.is_number_unsigned())
             {
-                std::string str = std::to_string(jsonParam.get<double>());
-                buf.append(str.c_str(), str.size());
+                str = std::to_string(jsonParam.get<uint64_t>());
+            }
+            else if (jsonParam.is_number_integer())
+            {
+                str = std::to_string(jsonParam.get<int64_t>());
+            }
+            else if (jsonParam.is_number_float())
+            {
+                str = std::to_string(jsonParam.get<double>());
             }
             else if (jsonParam.is_string())
             {
-                std::string str = jsonParam.get<std::string>();
-                buf.append(str.c_str(), str.size());
+                str = jsonParam.get<std::string>();
             }
             else
             {
                 throw std::runtime_error("Invalid value for float");
             }
+            buf.append(str.c_str(), str.size());
             break;
         }
         case PG_TEXT:
