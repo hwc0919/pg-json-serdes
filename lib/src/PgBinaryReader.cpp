@@ -6,7 +6,12 @@
 
 using namespace pg_json;
 
+// 1970-1-1 0:0:0 --> 2000-1-1 0:0:0
+#define PG_EPOCH_DELTA        946684800L
+#define MICRO_SECONDS_PRE_SEC 1000000LL
+
 static int64_t readIntBE(Cursor & cursor, size_t size);
+static std::string timestampToString(int64_t microSecondsSinceEpoch, const char * fmt, bool showMicroseconds);
 
 json_t PgBinaryReader::readPrimitive(const PgType & type, Cursor & cursor)
 {
@@ -67,12 +72,12 @@ json_t PgBinaryReader::readPrimitive(const PgType & type, Cursor & cursor)
         // case PG_TIME:
         // case PG_DATE:
         case PG_TIMESTAMP: {
-            int64_t pgEpoch = readIntBE(cursor, 8);
-            // 1970-1-1 0:0:0 --> 2000-1-1 0:0:0
-            static unsigned long long PG_EPOCH_DELTA = 946684800L;
-            // TODO: convert to string? or give a setting
-            return pgEpoch / 1000 + PG_EPOCH_DELTA * 1000;
-            //      ^us to ms      ^shift EPOCH from 2000 to 1970
+            int64_t pgEpoch = readIntBE(cursor, 8); // micro seconds
+
+            // shift EPOCH from 2000 to 1970
+            int64_t micro = pgEpoch + PG_EPOCH_DELTA * 1000 * 1000;
+            // TODO: give a setting
+            return timestampToString(micro, "%F %T", false);
         }
         default: {
             throw std::runtime_error("Unsupported pg type oid: " + std::to_string(type.oid_));
@@ -85,7 +90,7 @@ void PgBinaryReader::readArrayStart(const PgType & elemType, Cursor & cursor)
     using Oid = unsigned int;
 
     unsigned int dimension = readIntBE(cursor, sizeof(unsigned int));
-    unsigned int nullMap = readIntBE(cursor, sizeof(unsigned int));
+    unsigned int _nullMap = readIntBE(cursor, sizeof(unsigned int));
     Oid oid = readIntBE(cursor, sizeof(unsigned int));
     if (oid != elemType.oid_)
     {
@@ -223,4 +228,30 @@ static int64_t readIntBE(Cursor & cursor, size_t size)
             throw std::runtime_error("Invalid integer size, should be 1, 2, 4 or 8");
         }
     }
+}
+
+static std::string timestampToString(int64_t microSecondsSinceEpoch, const char * fmt, bool showMicroseconds)
+{
+    char buf[256] = { 0 };
+    time_t seconds = static_cast<time_t>(microSecondsSinceEpoch / MICRO_SECONDS_PRE_SEC);
+    struct tm tm_time
+    {
+    };
+#ifndef _WIN32
+    gmtime_r(&seconds, &tm_time);
+#else
+    gmtime_s(&tm_time, &seconds);
+#endif
+    size_t len = strftime(buf, sizeof(buf), fmt, &tm_time);
+    std::string res{ buf, len };
+    if (!showMicroseconds)
+        return res;
+    char decimals[12] = { 0 };
+    int microseconds = static_cast<int>(microSecondsSinceEpoch % MICRO_SECONDS_PRE_SEC);
+    if (microseconds)
+    {
+        len = snprintf(decimals, sizeof(decimals), ".%06d", microseconds);
+        res += std::string(decimals, len);
+    }
+    return std::string(buf) + decimals;
 }

@@ -27,7 +27,7 @@ int main()
 
     std::string name = "Nitromelon";
     int age = 27;
-    std::string birthday = "1949-10-01 11:11:11";
+    std::string birthday = "1949-10-01T11:11:11.123Z";
     std::vector<std::string> hobbies{ "programing", "video games",
                                       R"(find \/"'(){} bug)" };
     json_t person{
