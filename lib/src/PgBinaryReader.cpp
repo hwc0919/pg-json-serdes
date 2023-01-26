@@ -76,8 +76,8 @@ json_t PgBinaryReader::readPrimitive(const PgType & type, Cursor & cursor)
 
             // shift EPOCH from 2000 to 1970
             int64_t micro = pgEpoch + PG_EPOCH_DELTA * 1000 * 1000;
-            // TODO: give a setting
-            return timestampToString(micro, "%F %T", false);
+            // ISO 8601
+            return timestampToString(micro, "%FT%T", true) + 'Z';
         }
         default: {
             throw std::runtime_error("Unsupported pg type oid: " + std::to_string(type.oid_));
@@ -234,6 +234,13 @@ static std::string timestampToString(int64_t microSecondsSinceEpoch, const char 
 {
     char buf[256] = { 0 };
     time_t seconds = static_cast<time_t>(microSecondsSinceEpoch / MICRO_SECONDS_PRE_SEC);
+    int microseconds = static_cast<int>(microSecondsSinceEpoch % MICRO_SECONDS_PRE_SEC);
+    // floor div
+    if (seconds <= 0 && microseconds < 0 && showMicroseconds)
+    {
+        seconds -= 1;
+        microseconds += MICRO_SECONDS_PRE_SEC;
+    }
     struct tm tm_time
     {
     };
@@ -247,11 +254,14 @@ static std::string timestampToString(int64_t microSecondsSinceEpoch, const char 
     if (!showMicroseconds)
         return res;
     char decimals[12] = { 0 };
-    int microseconds = static_cast<int>(microSecondsSinceEpoch % MICRO_SECONDS_PRE_SEC);
     if (microseconds)
     {
         len = snprintf(decimals, sizeof(decimals), ".%06d", microseconds);
+        while (len > 1 && decimals[len - 1] == '0')
+        {
+            --len;
+        }
         res += std::string(decimals, len);
     }
-    return std::string(buf) + decimals;
+    return res;
 }

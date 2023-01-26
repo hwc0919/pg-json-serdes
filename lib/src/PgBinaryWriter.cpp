@@ -284,12 +284,12 @@ static int64_t parseDatetimeString(const std::string & datetime)
     int year = { 0 }, month = { 0 }, day = { 0 },
         hour = { 0 }, minute = { 0 }, second = { 0 }, microSecond = { 0 };
 
-    // Try parse %Y-%m-%d %H:%M:%S
-    std::vector<std::string> v = splitString(datetime, " ");
+    // Try parse "%Y-%m-%dT%H:%M:%S"
+    std::vector<std::string> v = splitString(datetime, "T");
     if (v.size() != 2)
     {
-        // Try parse %Y-%m-%d'T'%H:%M:%S
-        std::vector<std::string> v1 = splitString(datetime, "T");
+        // Try parse "%Y-%m-%d %H:%M:%S"
+        std::vector<std::string> v1 = splitString(datetime, " ");
         if (v1.size() == 2)
         {
             v = std::move(v1);
@@ -322,7 +322,7 @@ static int64_t parseDatetimeString(const std::string & datetime)
         if (time.size() > 2) // 3
         {
             // %H:%M:%S'Z'
-            if (!time[2].empty() && !std::isdigit(time[2].back()))
+            if (!time[2].empty() && time[2].back() == 'Z')
             {
                 time[2].pop_back();
             }

@@ -90,7 +90,15 @@ json_t PgTextReader::readPrimitive(const PgType & type, Cursor & cursor)
         case PG_TIME:
         case PG_DATE:
         case PG_TIMESTAMP: {
-            // no escape as long as input is correct
+            // ISO 8601
+            if (str.size() >= 11 && str[10] == ' ')
+            {
+                str[10] = 'T';
+            }
+            if (!str.empty() && str.back() != 'Z')
+            {
+                str.push_back('Z');
+            }
             return str;
         }
         default: {
