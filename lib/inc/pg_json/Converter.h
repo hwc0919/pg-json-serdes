@@ -15,8 +15,6 @@ namespace pg_json
 class Converter
 {
 public:
-    using BufferFactory = std::function<std::shared_ptr<Buffer>()>;
-    using CursorFactory = std::function<std::shared_ptr<Cursor>(const char *, size_t)>;
     using NullHandler = std::function<json_t(const PgType & pgType, bool explicitNull)>;
 
     explicit Converter(PgFormat format = PgFormat::kText);
@@ -30,14 +28,6 @@ public:
     {
         format_ = format;
     }
-    void setBufferFactory(BufferFactory factory)
-    {
-        bufferFactory_ = std::move(factory);
-    }
-    void setCursorFactory(CursorFactory factory)
-    {
-        cursorFactory_ = std::move(factory);
-    }
     void setNullHandler(NullHandler handler)
     {
         nullHandler_ = std::move(handler);
@@ -50,8 +40,6 @@ public:
 
 protected:
     PgFormat format_{ PgFormat::kText };
-    BufferFactory bufferFactory_;
-    CursorFactory cursorFactory_;
     NullHandler nullHandler_;
 };
 

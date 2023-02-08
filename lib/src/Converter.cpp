@@ -4,14 +4,6 @@
 
 using namespace pg_json;
 
-static std::shared_ptr<Buffer> defaultBufferFactory()
-{
-    return std::make_shared<StringBuffer>();
-};
-static std::shared_ptr<Cursor> defaultCursorFactory(const char * data, size_t len)
-{
-    return std::make_shared<RawCursor>(data, len);
-};
 static json_t defaultNullHandler(const PgType & pgType, bool explicitNull)
 {
     return json_t(nullptr);
@@ -19,8 +11,6 @@ static json_t defaultNullHandler(const PgType & pgType, bool explicitNull)
 
 Converter::Converter(PgFormat format)
     : format_(format)
-    , bufferFactory_(defaultBufferFactory)
-    , cursorFactory_(defaultCursorFactory)
     , nullHandler_(defaultNullHandler)
 {
 }
@@ -58,9 +48,9 @@ void Converter::parseJsonToParams(const PgFunc & func, const json_t & obj, PgPar
         {
             continue;
         }
-        auto buffer = bufferFactory_();
-        parseJsonToPg(*field.type(), jsonParam, *writer, *buffer);
-        setter.setParameter(idx, buffer->data(), buffer->size(), format_);
+        StringBuffer buffer;
+        parseJsonToPg(*field.type(), jsonParam, *writer, buffer);
+        setter.setParameter(idx, buffer.data(), buffer.size(), format_);
     }
 }
 
@@ -89,8 +79,8 @@ json_t Converter::parseResultToJson(const PgFunc & func, const PgResult & result
             continue;
         }
 
-        auto cursor = cursorFactory_(data, len);
-        json_t value = parsePgToJson(*field.type(), *reader, *cursor);
+        RawCursor cursor(data, len);
+        json_t value = parsePgToJson(*field.type(), *reader, cursor);
         root[name] = value;
     }
     return root;
