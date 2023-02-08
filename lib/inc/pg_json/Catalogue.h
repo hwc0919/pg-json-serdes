@@ -22,6 +22,7 @@ public:
     static const char * getMetaSql();
 
     virtual ~Catalogue();
+    virtual void setVerbose(bool) = 0;
     virtual std::vector<std::shared_ptr<PgFunc>> findFunctions(const std::string & name) = 0;
     virtual std::vector<std::shared_ptr<PgFunc>> findFunctions(const std::string & name, const std::string & nsp) = 0;
 };

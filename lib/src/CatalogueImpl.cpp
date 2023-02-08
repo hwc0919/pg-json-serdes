@@ -115,16 +115,19 @@ CatalogueImpl::MetaRow CatalogueImpl::parseMetaRow(int row)
         meta.nsp_ = std::string(meta_res_->getValue(row, 6), meta_res_->getLength(row, 6));
     }
 
-    printf("Load row %d: type: %c%c, idx: %d, oid: %d, name: \"%.*s\", elem_type_idx: %d, numFields: %d, namespace: \"%.*s\"\n",
-           row,
-           meta.type_,
-           meta.category_,
-           meta.idx_,
-           meta.oid_,
-           (int)meta.name_.size(), meta.name_.c_str(),
-           meta.elem_type_idx_,
-           meta.len_,
-           (int)meta.nsp_.size(), meta.nsp_.c_str());
+    if (verbose_)
+    {
+        printf("Load row %d: type: %c%c, idx: %d, oid: %d, name: \"%.*s\", elem_type_idx: %d, numFields: %d, namespace: \"%.*s\"\n",
+               row,
+               meta.type_,
+               meta.category_,
+               meta.idx_,
+               meta.oid_,
+               (int)meta.name_.size(), meta.name_.c_str(),
+               meta.elem_type_idx_,
+               meta.len_,
+               (int)meta.nsp_.size(), meta.nsp_.c_str());
+    }
     return meta;
 }
 
