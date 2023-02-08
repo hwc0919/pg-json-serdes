@@ -7,7 +7,7 @@ using namespace pg_json;
 
 void PgTextWriter::writePrimitive(const PgType & pgType, const json_t & jsonParam, Buffer & buf)
 {
-    switch (pgType.oid_)
+    switch (pgType.oid())
     {
         case PG_BOOL: {
             if (jsonParam.is_null() || jsonParam.empty()
@@ -134,7 +134,7 @@ void PgTextWriter::writePrimitive(const PgType & pgType, const json_t & jsonPara
             break;
         }
         default: {
-            throw std::runtime_error("Unsupported pg type oid: " + std::to_string(pgType.oid_));
+            throw std::runtime_error("Unsupported pg type oid: " + std::to_string(pgType.oid()));
         }
     }
 }

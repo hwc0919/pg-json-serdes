@@ -3,14 +3,15 @@
 //
 #pragma once
 
-#include <pg_json/PgWriter.h>
 #include <pg_json/PgField.h>
 #include <pg_json/PgFunc.h>
+#include <pg_json/PgWriter.h>
 #include <string>
 #include <vector>
 
 namespace pg_json
 {
+class PgFieldImpl;
 class PgFuncImpl : public PgFunc
 {
 public:
@@ -43,14 +44,8 @@ public:
     {
         return out_params_.size();
     }
-    const std::string & in_name(size_t i) const override
-    {
-        return in_params_[i].name_;
-    }
-    const std::string & out_name(size_t i) const override
-    {
-        return out_params_[i].name_;
-    }
+    const std::string & in_name(size_t i) const override;
+    const std::string & out_name(size_t i) const override;
     const PgField & in_field(size_t i) const override;
     const PgField & out_field(size_t i) const override;
     const std::string & in_type_name(size_t i) const override;
@@ -60,8 +55,8 @@ public:
     std::string name_;
     std::string cmp_name_;
 
-    std::vector<PgField> in_params_;
-    std::vector<PgField> out_params_;
+    std::vector<PgFieldImpl> in_params_;
+    std::vector<PgFieldImpl> out_params_;
 
     // Derived data
     std::string stmt_;      // Statement to send to DB

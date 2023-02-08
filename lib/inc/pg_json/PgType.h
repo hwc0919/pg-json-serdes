@@ -27,38 +27,25 @@ enum OidType
     PG_JSONB = 3802
 };
 
-struct PgType
+class PgType
 {
+public:
     using Oid = unsigned int;
 
-    std::string name_;    // Name of type is not important, because we do parameter matching by parameter name not parameter type name.
-    Oid oid_;             // Oid of the type in DB
-    char category_;       // 'A'=Array, 'C'=Composite, 'S'=String, 'N'=Number, ...
-    unsigned short size_; // If category_ == 'C', this is length of `fields_`; otherwise it is size of the type in bytes, 0 if variable sized.
+    virtual ~PgType() = default;
+    virtual Oid oid() const = 0;
+    virtual const std::string & name() const = 0;
+    virtual char category() const = 0;
+    virtual size_t size() const = 0;
+    virtual size_t numFields() const = 0;
+    virtual const PgType * elemType() const = 0;
+    virtual const PgField & field(size_t idx) const = 0;
 
-    std::vector<PgField> fields_;
-    std::shared_ptr<PgType> elem_type_; // Link to element type if this is an array type, or nullptr if this is a base type.
-
-    bool isPrimitive() const
-    {
-        return category_ != 'A' && category_ != 'C';
-    }
-    bool isArray() const
-    {
-        return category_ == 'A';
-    }
-    bool isComposite() const
-    {
-        return category_ == 'C';
-    }
-    bool isString() const
-    {
-        return category_ == 'S';
-    }
-    bool isNumber() const
-    {
-        return category_ == 'N';
-    }
+    virtual bool isPrimitive() const = 0;
+    virtual bool isArray() const = 0;
+    virtual bool isComposite() const = 0;
+    virtual bool isString() const = 0;
+    virtual bool isNumber() const = 0;
 };
 
 } // namespace pg_json

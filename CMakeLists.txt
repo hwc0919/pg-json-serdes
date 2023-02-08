@@ -40,9 +40,11 @@ set(private_headers
         lib/src/MetaSql.h
         lib/src/PgBinaryReader.h
         lib/src/PgBinaryWriter.h
+        lib/src/PgFieldImpl.h
         lib/src/PgFuncImpl.h
         lib/src/PgTextReader.h
         lib/src/PgTextWriter.h
+        lib/src/PgTypeImpl.h
         lib/src/Scope.h)
 
 set(PJ_SRC
@@ -51,6 +53,7 @@ set(PJ_SRC
         lib/src/Converter.cpp
         lib/src/PgBinaryReader.cpp
         lib/src/PgBinaryWriter.cpp
+        lib/src/PgFieldImpl.cpp
         lib/src/PgFuncImpl.cpp
         lib/src/PgReader.cpp
         lib/src/PgTextReader.cpp

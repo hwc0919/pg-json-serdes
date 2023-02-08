@@ -43,7 +43,7 @@ static void writeIntBE(Buffer & buf, unsigned long long number, size_t size)
 
 void PgBinaryWriter::writePrimitive(const PgType & pgType, const json_t & jsonParam, Buffer & buf)
 {
-    switch (pgType.oid_)
+    switch (pgType.oid())
     {
         case PG_BOOL: {
             if (jsonParam.is_null() || jsonParam.empty()
@@ -77,7 +77,7 @@ void PgBinaryWriter::writePrimitive(const PgType & pgType, const json_t & jsonPa
                 throw std::runtime_error("Invalid value for int");
             }
             // Write number in big endian order
-            writeIntBE(buf, number, pgType.size_);
+            writeIntBE(buf, number, pgType.size());
             break;
         }
         case PG_FLOAT4:
@@ -103,7 +103,7 @@ void PgBinaryWriter::writePrimitive(const PgType & pgType, const json_t & jsonPa
             {
                 throw std::runtime_error("Invalid json for float");
             }
-            if (pgType.oid_ == PG_FLOAT4)
+            if (pgType.oid() == PG_FLOAT4)
             {
                 float fNumber = (float)number;
                 writeIntBE(buf, *reinterpret_cast<unsigned int *>(&fNumber), 4);
@@ -121,7 +121,7 @@ void PgBinaryWriter::writePrimitive(const PgType & pgType, const json_t & jsonPa
             std::string str = jsonParam.is_string()
                                   ? jsonParam.get<std::string>()
                                   : jsonParam.dump();
-            if (pgType.oid_ == PG_JSONB)
+            if (pgType.oid() == PG_JSONB)
             {
                 buf.append(1, '\x01');
             }
@@ -162,7 +162,7 @@ void PgBinaryWriter::writePrimitive(const PgType & pgType, const json_t & jsonPa
             break;
         }
         default: {
-            throw std::runtime_error("Unsupported pg type oid: " + std::to_string(pgType.oid_));
+            throw std::runtime_error("Unsupported pg type oid: " + std::to_string(pgType.oid()));
         }
     }
 }
@@ -171,7 +171,7 @@ void PgBinaryWriter::writeArrayStart(const PgType & elemType, size_t len, Buffer
 {
     writeIntBE(buf, 1, sizeof(unsigned int));
     writeIntBE(buf, 0, sizeof(unsigned int));
-    writeIntBE(buf, elemType.oid_, sizeof(unsigned int));
+    writeIntBE(buf, elemType.oid(), sizeof(unsigned int));
     writeIntBE(buf, len, sizeof(unsigned int));
     writeIntBE(buf, 1, sizeof(unsigned int));
     scopeStack_.emplace_back(ScopeType::Array);
@@ -215,7 +215,7 @@ void PgBinaryWriter::writeCompositeStart(const PgType & type, Buffer & buf)
 {
     scopeStack_.emplace_back(ScopeType::Composite);
     // composite field number is known in advance
-    writeIntBE(buf, type.fields_.size(), sizeof(unsigned int));
+    writeIntBE(buf, type.numFields(), sizeof(unsigned int));
 }
 
 void PgBinaryWriter::writeCompositeEnd(Buffer & buf)
@@ -227,7 +227,7 @@ void PgBinaryWriter::writeCompositeEnd(Buffer & buf)
 void PgBinaryWriter::writeFieldStart(const PgType & fieldType, Buffer & buf)
 {
     assert(!scopeStack_.empty() && scopeStack_.back().type == ScopeType::Composite);
-    writeIntBE(buf, fieldType.oid_, sizeof(unsigned int)); // write field oid
+    writeIntBE(buf, fieldType.oid(), sizeof(unsigned int)); // write field oid
     ScopeMark scope(ScopeType::CompositeField);
     scope.offset = buf.size();
     buf.append(sizeof(unsigned int), '\0'); // Reserve 4 bytes for field length
@@ -255,7 +255,7 @@ void PgBinaryWriter::writeFieldSeparator(Buffer & buf)
 
 void PgBinaryWriter::writeNullField(const PgType & fieldType, Buffer & buf)
 {
-    writeIntBE(buf, fieldType.oid_, sizeof(unsigned int));
+    writeIntBE(buf, fieldType.oid(), sizeof(unsigned int));
     writeIntBE(buf, 0xFFFFFFFF, sizeof(unsigned int));
 }
 

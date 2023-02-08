@@ -13,7 +13,7 @@ using namespace pg_json;
 
 json_t defaultValueNullHandler(const PgType & pgType, bool /*explicitNull*/)
 {
-    std::cout << "defaultValueNullHandler pgType: " << pgType.name_ << ", cat: " << pgType.category_ << std::endl;
+    std::cout << "defaultValueNullHandler pgType: " << pgType.name() << ", cat: " << pgType.category() << std::endl;
     if (pgType.isComposite())
     {
         return json_t::object();

@@ -1,4 +1,4 @@
-with base(ns, cat, object_oid, att_ordinal, att_name, type_oid, len, pronsp) as
+with base(ns, cat, object_oid, att_ordinal, att_name, type_oid, numFields, pronsp) as
 (
     -- Functions (excluding parameters)
     select
@@ -9,7 +9,7 @@ with base(ns, cat, object_oid, att_ordinal, att_name, type_oid, len, pronsp) as
         p.proname       as att_name,
         -- when att_ordinal=0: null=proc, 0=type, N=array(where N is the element OID)
         null            as type_oid,
-        0               as len,
+        0               as numFields,
         n.nspname       as pronsp
     from
         pg_proc p
@@ -37,7 +37,7 @@ with base(ns, cat, object_oid, att_ordinal, att_name, type_oid, len, pronsp) as
         x.arg_ordinal                       as att_ordinal,
         p.proargnames[x.arg_ordinal]        as att_name,
         x.arg_type_oid                      as type_oid,
-        null                                as len,
+        null                                as numFields,
         null                                as pronsp
     from
         pg_proc p
@@ -69,7 +69,7 @@ with base(ns, cat, object_oid, att_ordinal, att_name, type_oid, len, pronsp) as
             when 'C' then 0
             -- Some Composite type has no member, which leaves len as -1 and no aggregation result to overwrite it.
             else t.typlen
-        end                                 as len,
+        end                                 as numFields,
         null                                as pronsp
     from
         pg_type t
@@ -115,7 +115,7 @@ with base(ns, cat, object_oid, att_ordinal, att_name, type_oid, len, pronsp) as
         a.attnum                            as att_ordinal,
         a.attname                           as att_name,
         a.atttypid                          as type_oid,
-        a.attlen                            as len,
+        a.attlen                            as numFields,
         null                                as pronsp
     from
         pg_attribute a
@@ -168,7 +168,7 @@ select
     m.object_oid            as object_oid,
     m.att_name              as att_name,
     m.type_idx::int         as type_idx,
-    m.len::int              as len,
+    m.numFields::int              as numFields,
     m.pronsp                as pronsp
 from
 (
@@ -204,7 +204,7 @@ from
         b.att_name,
         b.type_oid,
         coalesce(o1.idx, a.out_param_count, 0), -- type_idx or out_param_count
-        coalesce(a.in_param_count, b.len),      -- len      or input_param_count
+        coalesce(a.in_param_count, b.numFields),      -- len      or input_param_count
         b.pronsp
     from
         base b
@@ -224,4 +224,4 @@ from
         b.object_oid, b.att_ordinal
     )
 
-) as m(ns, cat, object_idx, object_oid, att_ordinal, att_name, type_oid, type_idx, len, pronsp);
+) as m(ns, cat, object_idx, object_oid, att_ordinal, att_name, type_oid, type_idx, numFields, pronsp);

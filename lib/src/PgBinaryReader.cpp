@@ -31,7 +31,7 @@ json_t PgBinaryReader::readPrimitive(const PgType & type, Cursor & cursor)
         len = scopeStack_.back().len;
     }
 
-    switch (type.oid_)
+    switch (type.oid())
     {
         case PG_BOOL: {
             return readIntBE(cursor, 1) != 0;
@@ -39,7 +39,7 @@ json_t PgBinaryReader::readPrimitive(const PgType & type, Cursor & cursor)
         case PG_INT2:
         case PG_INT4:
         case PG_INT8: {
-            return readIntBE(cursor, type.size_);
+            return readIntBE(cursor, type.size());
         }
         case PG_FLOAT4: {
             int32_t val = static_cast<int32_t>(readIntBE(cursor, 4));
@@ -53,7 +53,7 @@ json_t PgBinaryReader::readPrimitive(const PgType & type, Cursor & cursor)
         case PG_VARCHAR:
         case PG_JSON:
         case PG_JSONB: {
-            if (type.oid_ == PG_JSONB)
+            if (type.oid() == PG_JSONB)
             {
                 if (len < 1 || *cursor.peek() != '\x01')
                 {
@@ -80,7 +80,7 @@ json_t PgBinaryReader::readPrimitive(const PgType & type, Cursor & cursor)
             return timestampToString(micro, "%FT%T", true) + 'Z';
         }
         default: {
-            throw std::runtime_error("Unsupported pg type oid: " + std::to_string(type.oid_));
+            throw std::runtime_error("Unsupported pg type oid: " + std::to_string(type.oid()));
         }
     }
 }
@@ -92,7 +92,7 @@ void PgBinaryReader::readArrayStart(const PgType & elemType, Cursor & cursor)
     unsigned int dimension = readIntBE(cursor, sizeof(unsigned int));
     unsigned int _nullMap = readIntBE(cursor, sizeof(unsigned int));
     Oid oid = readIntBE(cursor, sizeof(unsigned int));
-    if (oid != elemType.oid_)
+    if (oid != elemType.oid())
     {
         throw std::runtime_error("Oid mismatch");
     }
@@ -171,7 +171,7 @@ void PgBinaryReader::readCompositeEnd(Cursor & cursor)
 
 void PgBinaryReader::readFieldStart(const PgType & fieldType, Cursor & cursor)
 {
-    if (fieldType.oid_ != readIntBE(cursor, sizeof(unsigned int)))
+    if (fieldType.oid() != readIntBE(cursor, sizeof(unsigned int)))
     {
         throw std::runtime_error("Field oid mismatch");
     }

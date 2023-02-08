@@ -9,12 +9,13 @@
 
 namespace pg_json
 {
-class PgType;
+class PgTypeImpl;
 class PgFuncImpl;
 class CatalogueImpl : public Catalogue
 {
 public:
     explicit CatalogueImpl(std::shared_ptr<PgResult> meta_res);
+    ~CatalogueImpl() override;
     void parseMeta();
 
     std::vector<std::shared_ptr<PgFunc>> findFunctions(const std::string & name) override
@@ -47,7 +48,7 @@ private:
     std::shared_ptr<PgResult> meta_res_;
     bool parsed_{ false };
 
-    std::vector<std::shared_ptr<PgType>> types_;
+    std::vector<std::shared_ptr<PgTypeImpl>> types_;
     std::vector<std::shared_ptr<PgFuncImpl>> funcs_;
 };
 } // namespace pg_json

@@ -8,12 +8,14 @@
 
 namespace pg_json
 {
-struct PgType;
-struct PgField
+class PgType;
+class PgField
 {
+public:
+    virtual ~PgField() = default;
     // pg field name. For function parameters, name_[-1] is a direction indicator: 'i', 'o', 'b', 'v'.
-    std::string name_;
-    std::shared_ptr<PgType> type_;
+    virtual const std::string & name() const = 0;
+    virtual const PgType * type() const = 0;
 };
 
 } // namespace pg_json

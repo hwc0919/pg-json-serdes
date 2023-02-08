@@ -4,21 +4,25 @@
 
 #include "CatalogueImpl.h"
 #include "PgFuncImpl.h"
+#include "PgTypeImpl.h"
 
 #include <algorithm>
 #include <cassert>
 #include <pg_json/PgField.h>
 #include <pg_json/PgResult.h>
-#include <pg_json/PgType.h>
 #include <sstream>
 #include <stdexcept>
 
-pg_json::CatalogueImpl::CatalogueImpl(std::shared_ptr<PgResult> meta_res)
+using namespace pg_json;
+
+CatalogueImpl::CatalogueImpl(std::shared_ptr<PgResult> meta_res)
     : meta_res_(std::move(meta_res))
 {
 }
 
-void pg_json::CatalogueImpl::parseMeta()
+CatalogueImpl::~CatalogueImpl() = default;
+
+void CatalogueImpl::parseMeta()
 {
     if (parsed_)
         return;
@@ -56,11 +60,11 @@ void pg_json::CatalogueImpl::parseMeta()
     prepareFunctions();
 }
 
-std::vector<std::shared_ptr<pg_json::PgFunc>> pg_json::CatalogueImpl::findFunctions(const std::string & name, const std::string & nsp)
+std::vector<std::shared_ptr<PgFunc>> CatalogueImpl::findFunctions(const std::string & name, const std::string & nsp)
 {
     auto iters = std::equal_range(funcs_.begin(), funcs_.end(), nsp + "." + name);
 
-    std::vector<std::shared_ptr<pg_json::PgFunc>> res;
+    std::vector<std::shared_ptr<PgFunc>> res;
     for (auto it = iters.first; it != iters.second; ++it)
     {
         res.push_back(*it);
@@ -68,7 +72,7 @@ std::vector<std::shared_ptr<pg_json::PgFunc>> pg_json::CatalogueImpl::findFuncti
     return res;
 }
 
-pg_json::CatalogueImpl::MetaRow pg_json::CatalogueImpl::parseMetaRow(int row)
+CatalogueImpl::MetaRow CatalogueImpl::parseMetaRow(int row)
 {
     MetaRow meta;
     if (!meta_res_->isNull(row, 0))
@@ -111,7 +115,7 @@ pg_json::CatalogueImpl::MetaRow pg_json::CatalogueImpl::parseMetaRow(int row)
         meta.nsp_ = std::string(meta_res_->getValue(row, 6), meta_res_->getLength(row, 6));
     }
 
-    printf("Load row %d: type: %c%c, idx: %d, oid: %d, name: \"%.*s\", elem_type_idx: %d, len: %d, namespace: \"%.*s\"\n",
+    printf("Load row %d: type: %c%c, idx: %d, oid: %d, name: \"%.*s\", elem_type_idx: %d, numFields: %d, namespace: \"%.*s\"\n",
            row,
            meta.type_,
            meta.category_,
@@ -124,19 +128,19 @@ pg_json::CatalogueImpl::MetaRow pg_json::CatalogueImpl::parseMetaRow(int row)
     return meta;
 }
 
-int pg_json::CatalogueImpl::parseType(const pg_json::CatalogueImpl::MetaRow & meta, int startRow)
+int CatalogueImpl::parseType(const CatalogueImpl::MetaRow & meta, int startRow)
 {
     // The statistic row for types
     if (meta.oid_ == 0)
     {
         for (size_t i = 0; i != meta.len_; ++i)
         {
-            types_.push_back(std::make_shared<PgType>());
+            types_.push_back(std::make_shared<PgTypeImpl>());
         }
         return 0;
     }
     assert(meta.idx_ > 0);
-    PgType & typeInfo = *types_[meta.idx_ - 1];
+    PgTypeImpl & typeInfo = *types_[meta.idx_ - 1];
     typeInfo.name_ = meta.name_;
     typeInfo.oid_ = meta.oid_;
     typeInfo.category_ = meta.category_;
@@ -150,18 +154,17 @@ int pg_json::CatalogueImpl::parseType(const pg_json::CatalogueImpl::MetaRow & me
         }
         // Array
         case 'A': {
-            typeInfo.elem_type_ = types_[meta.elem_type_idx_ - 1];
+            typeInfo.elemType_ = types_[meta.elem_type_idx_ - 1];
             return 0;
         }
         // primitive types
         default: {
-            typeInfo.elem_type_ = nullptr;
             return 0;
         }
     }
 }
 
-int pg_json::CatalogueImpl::parseFunction(const pg_json::CatalogueImpl::MetaRow & meta, int startRow)
+int CatalogueImpl::parseFunction(const CatalogueImpl::MetaRow & meta, int startRow)
 {
     // The statistic row for functions
     if (meta.oid_ == 0)
@@ -198,7 +201,9 @@ int pg_json::CatalogueImpl::parseFunction(const pg_json::CatalogueImpl::MetaRow 
                         func.nsp_.c_str(), func.name_.c_str(), fieldMeta.name_.c_str());
                 return -1;
             }
-            func.in_params_.push_back(PgField{ fieldMeta.name_, types_[fieldMeta.elem_type_idx_ - 1] });
+            func.in_params_.emplace_back(
+                fieldMeta.name_,
+                types_[fieldMeta.elem_type_idx_ - 1]);
             --numParams;
         }
         if (paramMode == 'o' || paramMode == 'b' || paramMode == 't')
@@ -209,8 +214,9 @@ int pg_json::CatalogueImpl::parseFunction(const pg_json::CatalogueImpl::MetaRow 
                         func.nsp_.c_str(), func.name_.c_str(), fieldMeta.name_.c_str());
                 return -1;
             }
-            func.out_params_.push_back(PgField{
-                fieldMeta.name_, types_[fieldMeta.elem_type_idx_ - 1] });
+            func.out_params_.emplace_back(
+                std::move(fieldMeta.name_),
+                types_[fieldMeta.elem_type_idx_ - 1]);
             --numCols;
         }
     }
@@ -218,22 +224,22 @@ int pg_json::CatalogueImpl::parseFunction(const pg_json::CatalogueImpl::MetaRow 
     return nRows;
 }
 
-int pg_json::CatalogueImpl::parseUdt(const MetaRow & meta, int startRow)
+int CatalogueImpl::parseUdt(const MetaRow & meta, int startRow)
 {
-    PgType & typeInfo = *types_[meta.idx_ - 1];
+    PgTypeImpl & typeInfo = *types_[meta.idx_ - 1];
 
     for (int i = 0; i < typeInfo.size_; i++)
     {
         MetaRow fieldMeta = parseMetaRow(startRow + i);
 
-        typeInfo.fields_.push_back(PgField{
-            fieldMeta.name_,
-            types_[fieldMeta.elem_type_idx_ - 1] });
+        typeInfo.fields_.emplace_back(
+            std::move(fieldMeta.name_),
+            types_[fieldMeta.elem_type_idx_ - 1]);
     }
     return typeInfo.size_;
 }
 
-void pg_json::CatalogueImpl::prepareFunctions()
+void CatalogueImpl::prepareFunctions()
 {
     // Sort functions by cmp_name_
     std::sort(funcs_.begin(), funcs_.end());
@@ -254,7 +260,7 @@ void pg_json::CatalogueImpl::prepareFunctions()
         // Parameter OID and format array, used when passing parameters to PQExecParams()
         for (int i = 0; i < func->in_params_.size(); i++)
         {
-            func->oids_.push_back(func->in_params_[i].type_->oid_);
+            func->oids_.push_back(func->in_params_[i].type()->oid());
         }
     }
 }

@@ -58,7 +58,7 @@ json_t PgTextReader::readPrimitive(const PgType & type, Cursor & cursor)
         return nullptr;
     }
     // Special treatments on text
-    switch (type.oid_)
+    switch (type.oid())
     {
         case PG_TEXT:
         case PG_VARCHAR:
@@ -69,7 +69,7 @@ json_t PgTextReader::readPrimitive(const PgType & type, Cursor & cursor)
     }
 
     std::string str = readWholeField(cursor);
-    switch (type.oid_)
+    switch (type.oid())
     {
         case PG_BOOL: {
             if (str.empty() || str.front() == 'f')
@@ -102,7 +102,7 @@ json_t PgTextReader::readPrimitive(const PgType & type, Cursor & cursor)
             return str;
         }
         default: {
-            throw std::runtime_error("Unsupported pg type oid: " + std::to_string(type.oid_));
+            throw std::runtime_error("Unsupported pg type oid: " + std::to_string(type.oid()));
         }
     }
 }

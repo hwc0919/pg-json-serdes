@@ -33,18 +33,18 @@ void Converter::parseJsonToParams(const PgFunc & func, const json_t & obj, PgPar
     for (size_t idx = 0; idx != func.in_size(); ++idx)
     {
         auto & field = func.in_field(idx);
-        const std::string & name = field.name_;
+        const std::string & name = field.name();
 
         json_t tmp;
         const json_t * tmpPtr;
         if (!obj.contains(name))
         {
-            tmp = nullHandler_(*field.type_, false);
+            tmp = nullHandler_(*field.type(), false);
             tmpPtr = &tmp;
         }
         else if (obj[name].is_null())
         {
-            tmp = nullHandler_(*field.type_, true);
+            tmp = nullHandler_(*field.type(), true);
             tmpPtr = &tmp;
         }
         else
@@ -59,7 +59,7 @@ void Converter::parseJsonToParams(const PgFunc & func, const json_t & obj, PgPar
             continue;
         }
         auto buffer = bufferFactory_();
-        parseJsonToPg(*field.type_, jsonParam, *writer, *buffer);
+        parseJsonToPg(*field.type(), jsonParam, *writer, *buffer);
         setter.setParameter(idx, buffer->data(), buffer->size(), format_);
     }
 }
@@ -72,7 +72,7 @@ json_t Converter::parseResultToJson(const PgFunc & func, const PgResult & result
     for (size_t idx = 0; idx != func.out_size(); ++idx)
     {
         auto & field = func.out_field(idx);
-        const std::string & name = field.name_;
+        const std::string & name = field.name();
 
         // Field is null
         if (result.isNull(0, idx))
@@ -90,7 +90,7 @@ json_t Converter::parseResultToJson(const PgFunc & func, const PgResult & result
         }
 
         auto cursor = cursorFactory_(data, len);
-        json_t value = parsePgToJson(*field.type_, *reader, *cursor);
+        json_t value = parsePgToJson(*field.type(), *reader, *cursor);
         root[name] = value;
     }
     return root;
@@ -105,8 +105,8 @@ void Converter::parseJsonToPg(const PgType & pgType, const json_t & param, PgWri
     else if (pgType.isArray())
     {
         size_t len = param.is_array() ? param.size() : 1;
-        assert(pgType.elem_type_);
-        const PgType & elemType = *pgType.elem_type_;
+        assert(pgType.elemType());
+        const PgType & elemType = *pgType.elemType();
 
         writer.writeArrayStart(elemType, len, buffer);
         for (size_t i = 0; i < len; ++i)
@@ -141,28 +141,28 @@ void Converter::parseJsonToPg(const PgType & pgType, const json_t & param, PgWri
             throw std::runtime_error("Should be object");
         }
         writer.writeCompositeStart(pgType, buffer);
-        for (size_t i = 0; i != pgType.fields_.size(); ++i)
+        for (size_t i = 0; i != pgType.numFields(); ++i)
         {
             if (i > 0)
             {
                 writer.writeFieldSeparator(buffer);
             }
-            const PgField & field = pgType.fields_[i];
-            assert(field.type_ && !field.name_.empty());
-            const PgType & fieldType = *field.type_;
-            const std::string & name = field.name_;
+            const PgField & field = pgType.field(i);
+            assert(field.type() && !field.name().empty());
+            const PgType & fieldType = *field.type();
+            const std::string & name = field.name();
             // Field not found, leave it emtpy
 
             json_t tmp;
             const json_t * tmpPtr;
             if (!param.contains(name))
             {
-                tmp = nullHandler_(*field.type_, false);
+                tmp = nullHandler_(*field.type(), false);
                 tmpPtr = &tmp;
             }
             else if (param[name].is_null())
             {
-                tmp = nullHandler_(*field.type_, true);
+                tmp = nullHandler_(*field.type(), true);
                 tmpPtr = &tmp;
             }
             else
@@ -173,7 +173,7 @@ void Converter::parseJsonToPg(const PgType & pgType, const json_t & param, PgWri
             auto & fieldParam = *tmpPtr;
             if (fieldParam.is_null())
             {
-                writer.writeNullField(*field.type_, buffer);
+                writer.writeNullField(*field.type(), buffer);
                 continue;
             }
             writer.writeFieldStart(fieldType, buffer);
@@ -193,10 +193,10 @@ json_t Converter::parsePgToJson(const PgType & pgType, PgReader & reader, Cursor
     }
     else if (pgType.isArray())
     {
-        assert(pgType.elem_type_);
+        assert(pgType.elemType());
         json_t arr(json_t::value_t::array);
 
-        const PgType & elemType = *pgType.elem_type_;
+        const PgType & elemType = *pgType.elemType();
         reader.readArrayStart(elemType, cursor);
         size_t nElems = 0;
         // Element count can not be decided in text result
@@ -220,16 +220,16 @@ json_t Converter::parsePgToJson(const PgType & pgType, PgReader & reader, Cursor
         json_t obj(json_t::value_t::object);
         reader.readCompositeStart(pgType, cursor);
         // Field count is known from metadata
-        for (size_t i = 0; i != pgType.fields_.size(); ++i)
+        for (size_t i = 0; i != pgType.numFields(); ++i)
         {
             if (i > 0)
             {
                 reader.readFieldSeparator(cursor);
             }
-            const PgField & field = pgType.fields_[i];
-            assert(field.type_ && !field.name_.empty());
-            const PgType & fieldType = *field.type_;
-            const std::string & name = field.name_;
+            const PgField & field = pgType.field(i);
+            assert(field.type() && !field.name().empty());
+            const PgType & fieldType = *field.type();
+            const std::string & name = field.name();
 
             // recurse
             reader.readFieldStart(fieldType, cursor);
